@@ -29,13 +29,16 @@ namespace Rewrite_It
         /// </summary>
         public List<string> DialogPhrases { get; set; }
 
+        public Point DocumentLocation { get; set; }
+
         public MainOffice(Label option1, Label option2, Character person, Action update)
         {
             Option1 = option1;
             Option2 = option2;
             Person = person;
             DialogPhrases = new List<string>();
-            this.updateGraphics = update;
+            updateGraphics = update;
+            DocumentLocation = new Point(-500, 0);
         }
 
         /// <summary>
@@ -44,6 +47,21 @@ namespace Rewrite_It
         public enum Events
         {
             Article
+        }
+
+        public void Paint(PaintEventArgs e)
+        {
+            var graphics = e.Graphics;
+            graphics.DrawImage(Person.Images[Person.CurrentImage], Person.Location.X, Person.Location.Y);
+            graphics.DrawImage(Properties.Resources.OfficeTable, -70, 600);
+            graphics.DrawImage(Properties.Resources.Notebook, 100, 50);
+            graphics.DrawImage(Properties.Resources.HeadEditorBook, 150, 625);
+            graphics.DrawImage(Properties.Resources.OfficeComputer, 1020, 230);
+            graphics.DrawImage(Properties.Resources.Document, DocumentLocation.X, DocumentLocation.Y);
+            for (var i = 0; i < DialogPhrases.Count; i++)
+                graphics.DrawString(DialogPhrases[i], new Font(StringStyle.FontFamily, 16),
+                    new SolidBrush(Color.Black), new Rectangle(150, 70 + i * 70, 350, 70),
+                    new StringFormat() { Alignment = StringAlignment.Far });
         }
 
         /// <summary>
@@ -108,6 +126,7 @@ namespace Rewrite_It
                 DialogPhrases.Add(expectedDialogPhrases.Dequeue());
                 if (DialogPhrases.Count == 2)
                 {
+                    DocumentLocation = new Point(650, 650);
                     Option1.Location = new Point(150, 520);
                     Option2.Location = new Point(317, 520);
                 }

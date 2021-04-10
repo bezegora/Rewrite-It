@@ -4,14 +4,14 @@ using System.Windows.Forms;
 
 namespace Rewrite_It
 {
-    class ArticleText
+    public class ArticleText
     {
-        public Label Name { get; }
-        public Label Genre { get; }
-        public Label TargetAudience { get; }
-        public Label[] Content { get; }
+        public string Name { get; }
+        public string Genre { get; }
+        public string TargetAudience { get; }
+        public List<string> Content { get; }
 
-        public ArticleText(Label name, Label genre, Label targetAudience, Label[] content)
+        public ArticleText(string name, string genre, string targetAudience, List<string> content)
         {
             Name = name;
             Genre = genre;
@@ -19,9 +19,9 @@ namespace Rewrite_It
             Content = content;
         }
 
-        public ArticleText(Label name, Label targetAudience, Label[] content) 
-            : this(name, new Label(), targetAudience, content) { }
+        public ArticleText(string name, string targetAudience, List<string> content) 
+            : this(name, "", targetAudience, content) { }
 
-        public ArticleText() : this(new Label(), new Label(), new Label(), new Label[0]) { }
+        public ArticleText() : this("", "", "", new List<string>()) { }
     }
 }

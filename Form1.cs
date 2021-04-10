@@ -1,28 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Text;
 using System.Windows.Forms;
 
 namespace Rewrite_It
 {
+    /// <summary>
+    /// Содержит все игровые интерфейсы
+    /// </summary>
+    public enum Interfaces
+    {
+        MainMenu,
+        MainOffice,
+        CheckMode,
+        DayEnd
+    }
+
     public partial class Form1 : Form
     {
         /// <summary>
         /// Таймер, определяющий частоту перерисовки кадра
         /// </summary>
         private readonly Timer timerGraphicsUpdate;
+
+        /// <summary>
+        /// Определяет текущий нарисованный в форме игровой интерфейс
+        /// </summary>
+        private Interfaces currentInterface;
+
         private readonly MainOffice office;
+        private readonly CheckMode checkMode;
 
         public Form1()
         {
             InitializeComponent();
             DoubleBuffered = true;
+            var fontCollection = new PrivateFontCollection();
+            fontCollection.AddFontFile("PixelGeorgia.ttf");
+            StringStyle.SetFontFamily(fontCollection.Families[0]);
+            StringStyle.SetSolidBrush(new SolidBrush(Color.Black));
+            StringStyle.SetFont(new Font(StringStyle.FontFamily, 16));
 
+            currentInterface = Interfaces.MainOffice;
             office = new MainOffice(
                  new Label
                  {
                      Text = "Одобрить",
-                     Font = new Font("Pixel Georgia", 19),
+                     Font = new Font(StringStyle.FontFamily, 19),
                      AutoSize = true,
                      ForeColor = Color.Green,
                      BorderStyle = BorderStyle.FixedSingle,
@@ -32,7 +57,7 @@ namespace Rewrite_It
                  new Label
                  {
                      Text = "Отклонить",
-                     Font = new Font("Pixel Georgia", 19),
+                     Font = new Font(StringStyle.FontFamily, 19),
                      AutoSize = true,
                      ForeColor = Color.Red,
                      BorderStyle = BorderStyle.FixedSingle,
@@ -45,8 +70,15 @@ namespace Rewrite_It
                  },
                  Character.NamesImages.Women1),
                  () => Invalidate());
-            Controls.Add(office.Option1);
-            Controls.Add(office.Option2);
+            AddLabelsToControls(office.Option1, office.Option2);
+
+            checkMode = new CheckMode(new Dictionary<CheckMode.Tabs, Bitmap>
+            {
+                [CheckMode.Tabs.Guide] = new Bitmap(Properties.Resources.HeadBookTab1),
+                [CheckMode.Tabs.ErrorsList] = new Bitmap(Properties.Resources.HeadBookTab2),
+                [CheckMode.Tabs.CensoredList] = new Bitmap(Properties.Resources.HeadBookTab3)
+            },
+            () => Invalidate());
 
             timerGraphicsUpdate = new Timer { Interval = 10 };
             timerGraphicsUpdate.Tick += new EventHandler(Update);
@@ -54,7 +86,7 @@ namespace Rewrite_It
             office.EnterCharacter(office.Person, timerGraphicsUpdate, new Point(150, 150));
         }
 
-        public void Update(object sender, EventArgs e)
+        private void Update(object sender, EventArgs e)
         {
             Invalidate();
             var person = office.Person;
@@ -85,22 +117,60 @@ namespace Rewrite_It
             this.WindowState = FormWindowState.Maximized;
             this.BackgroundImageLayout = ImageLayout.Center;
             this.BackgroundImageLayout = ImageLayout.Stretch;
+
             Invalidate();
         }
 
         private void OnPaint(object sender, PaintEventArgs e)
         {
-            var graphics = e.Graphics;
-            var person = office.Person;
-            graphics.DrawImage(person.Images[person.CurrentImage], person.Location.X, person.Location.Y);
-            graphics.DrawImage(Properties.Resources.OfficeTable, -70, 600);
-            graphics.DrawImage(Properties.Resources.Notebook, 100, 50);
-            graphics.DrawImage(Properties.Resources.HeadEditorBook, 150, 625);
-            graphics.DrawImage(Properties.Resources.OfficeComputer, 1020, 230);
-            for (var i = 0; i < office.DialogPhrases.Count; i++)
-                graphics.DrawString(office.DialogPhrases[i], new Font("Pixel Georgia", 16),
-                    new SolidBrush(Color.Black), new Rectangle(150, 70 + i*70, 350, 70),
-                    new StringFormat() { Alignment = StringAlignment.Far });
+            switch (currentInterface)
+            {
+                case Interfaces.MainOffice:
+                    office.Paint(e);
+                    break;
+                case Interfaces.CheckMode:
+                    checkMode.Paint(e);
+                    break;
+            }
+        }
+
+        private void OnMouseClick(object sender, MouseEventArgs e)
+        {
+            if (IsClickedArea(e, office.DocumentLocation, new Point(Properties.Resources.Document.Size)))
+                ChangeInterface(Properties.Resources.CheckModeBackground, Interfaces.CheckMode);
+            if (IsClickedArea(e, checkMode.ExitButtonLocation, new Point(Properties.Resources.ExitFromCheckMode.Size)))
+                ChangeInterface(Properties.Resources.OfficeBackground, Interfaces.MainOffice);
+            if (IsClickedArea(e, new Point(checkMode.BookLocation.X + 143, checkMode.BookLocation.Y + 6), new Point(112, 56)))
+                checkMode.ChangeBookMode(CheckMode.Tabs.ErrorsList);
+            if (IsClickedArea(e, new Point(checkMode.BookLocation.X + 28, checkMode.BookLocation.Y + 6), new Point(112, 56)))
+                checkMode.ChangeBookMode(CheckMode.Tabs.Guide);
+
+            Invalidate();
+        }
+
+        private bool IsClickedArea(MouseEventArgs e, Point location, Point shift) =>
+            e.X >= location.X && e.Y >= location.Y &&
+            e.X <= location.X + shift.X &&
+            e.Y <= location.Y + shift.Y;
+
+        /// <summary>
+        /// Изменяет игровой интерфейс
+        /// </summary>
+        /// <param name="backgroundImage">Фоновое изображение интерфейса</param>
+        /// <param name="_interface">Новый интерфейс</param>
+        public void ChangeInterface(Image backgroundImage, Interfaces _interface)
+        {
+            currentInterface = _interface;
+            this.BackgroundImage = backgroundImage;
+            Controls.Clear();
+            if (currentInterface == Interfaces.MainOffice)
+                AddLabelsToControls(office.Option1, office.Option2);
+        }
+
+        public void AddLabelsToControls(params Label[] labels)
+        {
+            foreach (var label in labels)
+                Controls.Add(label);
         }
     }
 }

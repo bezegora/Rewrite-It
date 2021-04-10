@@ -63,6 +63,66 @@ namespace Rewrite_It.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap CheckModeBackground {
+            get {
+                object obj = ResourceManager.GetObject("CheckModeBackground", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Document {
+            get {
+                object obj = ResourceManager.GetObject("Document", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ExitFromCheckMode {
+            get {
+                object obj = ResourceManager.GetObject("ExitFromCheckMode", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap HeadBookTab1 {
+            get {
+                object obj = ResourceManager.GetObject("HeadBookTab1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap HeadBookTab2 {
+            get {
+                object obj = ResourceManager.GetObject("HeadBookTab2", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap HeadBookTab3 {
+            get {
+                object obj = ResourceManager.GetObject("HeadBookTab3", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap HeadEditorBook {
             get {
                 object obj = ResourceManager.GetObject("HeadEditorBook", resourceCulture);
@@ -107,6 +167,16 @@ namespace Rewrite_It.Properties {
             get {
                 object obj = ResourceManager.GetObject("OfficeTable", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Byte[].
+        /// </summary>
+        internal static byte[] PixelGeorgia {
+            get {
+                object obj = ResourceManager.GetObject("PixelGeorgia", resourceCulture);
+                return ((byte[])(obj));
             }
         }
         

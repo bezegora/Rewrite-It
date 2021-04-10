@@ -42,6 +42,7 @@ namespace Rewrite_It
             this.Text = "Rewrite It!";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.OnPaint);
+            this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.OnMouseClick);
             this.ResumeLayout(false);
 
         }

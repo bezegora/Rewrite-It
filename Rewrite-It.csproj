@@ -48,6 +48,8 @@
   <ItemGroup>
     <Compile Include="Character.cs" />
     <Compile Include="ArticleText.cs" />
+    <Compile Include="CheckMode.cs" />
+    <Compile Include="StringStyle.cs" />
     <Compile Include="MainOffice.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
@@ -65,6 +67,7 @@
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="bin\Debug\PixelGeorgia.ttf" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -100,6 +103,24 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Women1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\document.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HeadBookTab1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CheckModeBackground.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HeadBookTab2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HeadBookTab3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ExitFromCheckMode.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
