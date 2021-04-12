@@ -47,7 +47,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Character.cs" />
-    <Compile Include="ArticleText.cs" />
     <Compile Include="CheckMode.cs" />
     <Compile Include="StringStyle.cs" />
     <Compile Include="MainOffice.cs" />
@@ -121,6 +120,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\ExitFromCheckMode.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\PaperBackground.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

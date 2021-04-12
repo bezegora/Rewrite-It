@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Text;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace Rewrite_It
 {
@@ -43,6 +44,18 @@ namespace Rewrite_It
             StringStyle.SetFont(new Font(StringStyle.FontFamily, 16));
 
             currentInterface = Interfaces.MainOffice;
+
+            checkMode = new CheckMode(new Dictionary<CheckMode.Tabs, Bitmap>
+            {
+                [CheckMode.Tabs.Guide] = new Bitmap(Properties.Resources.HeadBookTab1),
+                [CheckMode.Tabs.MistakesList] = new Bitmap(Properties.Resources.HeadBookTab2),
+                [CheckMode.Tabs.CensoredList] = new Bitmap(Properties.Resources.HeadBookTab3)
+            },
+            () => Invalidate(),
+            labels => CreateEventClickForTextAreas(labels),
+            Color.CornflowerBlue,
+            Controls);
+
             office = new MainOffice(
                  new Label
                  {
@@ -69,16 +82,9 @@ namespace Rewrite_It
                      [Character.NamesImages.Women1] = Properties.Resources.Women1
                  },
                  Character.NamesImages.Women1),
-                 () => Invalidate());
+                 () => Invalidate(),
+                 checkMode);
             AddLabelsToControls(office.Option1, office.Option2);
-
-            checkMode = new CheckMode(new Dictionary<CheckMode.Tabs, Bitmap>
-            {
-                [CheckMode.Tabs.Guide] = new Bitmap(Properties.Resources.HeadBookTab1),
-                [CheckMode.Tabs.ErrorsList] = new Bitmap(Properties.Resources.HeadBookTab2),
-                [CheckMode.Tabs.CensoredList] = new Bitmap(Properties.Resources.HeadBookTab3)
-            },
-            () => Invalidate());
 
             timerGraphicsUpdate = new Timer { Interval = 10 };
             timerGraphicsUpdate.Tick += new EventHandler(Update);
@@ -141,7 +147,7 @@ namespace Rewrite_It
             if (IsClickedArea(e, checkMode.ExitButtonLocation, new Point(Properties.Resources.ExitFromCheckMode.Size)))
                 ChangeInterface(Properties.Resources.OfficeBackground, Interfaces.MainOffice);
             if (IsClickedArea(e, new Point(checkMode.BookLocation.X + 143, checkMode.BookLocation.Y + 6), new Point(112, 56)))
-                checkMode.ChangeBookMode(CheckMode.Tabs.ErrorsList);
+                checkMode.ChangeBookMode(CheckMode.Tabs.MistakesList);
             if (IsClickedArea(e, new Point(checkMode.BookLocation.X + 28, checkMode.BookLocation.Y + 6), new Point(112, 56)))
                 checkMode.ChangeBookMode(CheckMode.Tabs.Guide);
 
@@ -162,15 +168,51 @@ namespace Rewrite_It
         {
             currentInterface = _interface;
             this.BackgroundImage = backgroundImage;
+            checkMode.SetSelectedTextArea(null);
             Controls.Clear();
             if (currentInterface == Interfaces.MainOffice)
                 AddLabelsToControls(office.Option1, office.Option2);
+            if (currentInterface == Interfaces.CheckMode)
+                AddLabelsToControls(
+                    checkMode.TextAreas.Values
+                    .Select(tuple => tuple.Item2)
+                    .ToArray());
         }
 
         public void AddLabelsToControls(params Label[] labels)
         {
             foreach (var label in labels)
                 Controls.Add(label);
+        }
+
+        public void CreateEventClickForTextAreas(Label[] labels)
+        {
+            for (var i = 0; i < labels.Length; i++)
+                labels[i].Click += ((sender, e) =>
+                {
+                    var label = sender as Label;
+                    checkMode.SetSelectedTextArea(label);
+                });
+        }
+
+        public void CreateEventClickForMistakeAreas(Label[] labels)
+        {
+            for (var i = 0; i < labels.Length; i++)
+            {
+                labels[i].MouseHover += ((sender, e) =>
+                {
+                    var label = sender as Label;
+                    var description = new Label()
+                    {
+                        Text = checkMode.MistakesList[label.GetHashCode()].Item3,
+                        Font = StringStyle.Font,
+                        AutoSize = true,
+                        BorderStyle = BorderStyle.FixedSingle,
+                        Location = new Point(563, 147)
+                    };
+                    AddLabelsToControls(description);
+                });
+            }
         }
     }
 }

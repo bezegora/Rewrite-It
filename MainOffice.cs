@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace Rewrite_It
@@ -31,7 +32,9 @@ namespace Rewrite_It
 
         public Point DocumentLocation { get; set; }
 
-        public MainOffice(Label option1, Label option2, Character person, Action update)
+        private readonly CheckMode checkMode;
+
+        public MainOffice(Label option1, Label option2, Character person, Action update, CheckMode checkMode)
         {
             Option1 = option1;
             Option2 = option2;
@@ -39,6 +42,7 @@ namespace Rewrite_It
             DialogPhrases = new List<string>();
             updateGraphics = update;
             DocumentLocation = new Point(-500, 0);
+            this.checkMode = checkMode;
         }
 
         /// <summary>
@@ -106,14 +110,15 @@ namespace Rewrite_It
         {
             switch (_event)
             {
-                case MainOffice.Events.Article:
-                    StartEventArticle(new ArticleText());
-                    break;
+                case MainOffice.Events.Article: StartEventArticle(new StreamReader(@"Articles\Marketing1.txt")); break;
             }
         }
 
-        private void StartEventArticle(ArticleText articleText)
+        private void StartEventArticle(StreamReader textFile)
         {
+            //checkMode.ArticleText = textFile;
+            checkMode.CreateArticleText(textFile);
+
             DialogPhrases.Add("Добрый день!");
             var waitingTimer = new Timer { Interval = 3000 };
             var expectedDialogPhrases = new Queue<string>();
