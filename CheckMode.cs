@@ -172,21 +172,33 @@ namespace Rewrite_It
             var labelY = PaperLocation.Y + 5;
             var paperImage = Properties.Resources.PaperBackground;
 
+            // Следующий код идентичен. Нужен рефакторинг!
+            
+            //Название статьи
             var name = GetLabel(textFile.ReadLine(), new Point(labelX, labelY));
+            //Центрируем
             name.Location = new Point((PaperLocation.X + paperImage.Width - name.Width) / 2 + 115, name.Location.Y);
             name.TextAlign = ContentAlignment.MiddleCenter;
+            //Добавляем в словарь интерктивности
             TextAreas.Add(name.GetHashCode(), (Mistakes.None, name));
 
+            //Направленность
             var genre = GetLabel(textFile.ReadLine(), new Point(labelX, labelY));
+            //Выравнимаем по правому краю
             genre.Location = new Point(PaperLocation.X + paperImage.Width - genre.Width - 420, genre.Location.Y);
             genre.TextAlign = ContentAlignment.MiddleRight;
+            //Добавляем в словарь интерктивности
             TextAreas.Add(genre.GetHashCode(), (Mistakes.None, genre));
 
+            //ЦА
             var targetAudience = GetLabel(textFile.ReadLine(), new Point(labelX, labelY));
+            //Выравнимаем по правому краю
             targetAudience.Location = new Point(PaperLocation.X + paperImage.Width - targetAudience.Width - 420, targetAudience.Location.Y);
             targetAudience.TextAlign = ContentAlignment.MiddleRight;
+            //Добавляем в словарь интерктивности
             TextAreas.Add(targetAudience.GetHashCode(), (Mistakes.None, targetAudience));
 
+            //Следующие области текста автоматически выравниваются по левому краю
             var line = textFile.ReadLine();
             while (line != null)
             {
