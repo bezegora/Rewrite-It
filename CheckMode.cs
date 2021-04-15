@@ -49,11 +49,11 @@ namespace Rewrite_It
         /// </summary>
         public Tabs CurrentBookMode { get; private set; }
 
-        public Point ExitButtonLocation { get; }
+        public Point ExitButtonLocation { get { return new Point(1490, 30); } }
 
-        public Point BookLocation { get; }
+        public Point BookLocation { get { return new Point(-10, 10); } }
 
-        public Point PaperLocation { get; }
+        public static Point PaperLocation { get { return new Point(650, 0); } }
 
         public Dictionary<int, (Mistakes, Label, string)> MistakesList { get; }
 
@@ -73,10 +73,13 @@ namespace Rewrite_It
         /// Цвет выбранной текстовой области
         /// </summary>
         private readonly Color colorSelectedTextArea;
-        private int currentMistakeY;
+        private int currentMistakeY = 170;
 
-        public CheckMode(Dictionary<Tabs, Bitmap> bookFrames, Action update, Action<Label[]> eventTextAreas,
-                         Color colorSelectedTextArea, ControlCollection controls)
+        public CheckMode(Dictionary<Tabs, Bitmap> bookFrames,
+                         Action update,
+                         Action<Label[]> eventTextAreas,
+                         Color colorSelectedTextArea,
+                         ControlCollection controls)
         {
             this.controls = controls;
             updateGraphics = update;
@@ -85,7 +88,6 @@ namespace Rewrite_It
             BookModes = bookFrames;
             CurrentBookMode = Tabs.Guide;
             MistakesList = new Dictionary<int, (Mistakes, Label, string)>();
-            currentMistakeY = 170;
             AddNewMistake(Mistakes.NoNumbers, "Отсутствие чисел", "Однозначные числа (меньше 10) записываются буквами," +
                 " многозначные — в цифровой форме. \n В цифровой форме пишутся все даты. " +
                 "\n Цифровая форма при написании однозначных чисел используется," +
@@ -93,9 +95,6 @@ namespace Rewrite_It
             TextAreas = new Dictionary<int, (Mistakes, Label)>();
             ExpectedMistakeAreas = new Dictionary<int, (Mistakes, Label)>();
             SelectedTextArea = null;
-            ExitButtonLocation = new Point(1490, 30);
-            BookLocation = new Point(-10, 10);
-            PaperLocation = new Point(650, 0);
             this.colorSelectedTextArea = colorSelectedTextArea;
         }
 
@@ -170,36 +169,13 @@ namespace Rewrite_It
         {
             var labelX = PaperLocation.X + 10;
             var labelY = PaperLocation.Y + 5;
-            var paperImage = Properties.Resources.PaperBackground;
+            var line = textFile.ReadLine();
 
-            // Следующий код идентичен. Нужен рефакторинг!
-            
-            //Название статьи
-            var name = GetLabel(textFile.ReadLine(), new Point(labelX, labelY));
-            //Центрируем
-            name.Location = new Point((PaperLocation.X + paperImage.Width - name.Width) / 2 + 115, name.Location.Y);
-            name.TextAlign = ContentAlignment.MiddleCenter;
-            //Добавляем в словарь интерктивности
-            TextAreas.Add(name.GetHashCode(), (Mistakes.None, name));
-
-            //Направленность
-            var genre = GetLabel(textFile.ReadLine(), new Point(labelX, labelY));
-            //Выравнимаем по правому краю
-            genre.Location = new Point(PaperLocation.X + paperImage.Width - genre.Width - 420, genre.Location.Y);
-            genre.TextAlign = ContentAlignment.MiddleRight;
-            //Добавляем в словарь интерктивности
-            TextAreas.Add(genre.GetHashCode(), (Mistakes.None, genre));
-
-            //ЦА
-            var targetAudience = GetLabel(textFile.ReadLine(), new Point(labelX, labelY));
-            //Выравнимаем по правому краю
-            targetAudience.Location = new Point(PaperLocation.X + paperImage.Width - targetAudience.Width - 420, targetAudience.Location.Y);
-            targetAudience.TextAlign = ContentAlignment.MiddleRight;
-            //Добавляем в словарь интерктивности
-            TextAreas.Add(targetAudience.GetHashCode(), (Mistakes.None, targetAudience));
+            CreateLabel(textFile, ContentAlignment.MiddleCenter, labelX, ref labelY);
+            CreateLabel(textFile, ContentAlignment.MiddleRight, labelX, ref labelY);
+            CreateLabel(textFile, ContentAlignment.MiddleRight, labelX, ref labelY);
 
             //Следующие области текста автоматически выравниваются по левому краю
-            var line = textFile.ReadLine();
             while (line != null)
             {
                 var area = GetLabel(line, new Point(labelX, labelY));
@@ -208,6 +184,20 @@ namespace Rewrite_It
                 line = textFile.ReadLine();
             }
             createEventClickForTextAreas(TextAreas.Values.Select(tuple => tuple.Item2).ToArray());
+
+            void CreateLabel(StreamReader _textFile,
+                             ContentAlignment align,
+                             int x,
+                             ref int y)
+            {
+                var image = Properties.Resources.PaperBackground;
+                var text = GetLabel(_textFile.ReadLine(), new Point(x, y));
+                text.Location = align == ContentAlignment.MiddleCenter
+                    ? new Point((PaperLocation.X + image.Width - text.Width) / 2 + 115, text.Location.Y)
+                    : new Point(PaperLocation.X + image.Width - text.Width - 420, text.Location.Y);
+                text.TextAlign = align;
+                TextAreas.Add(text.GetHashCode(), (Mistakes.None, text));
+            }
 
             Label GetLabel(string text, Point location)
             {
@@ -229,12 +219,6 @@ namespace Rewrite_It
             }
         }
 
-        /// <summary>
-        /// Считывает со строки label тип ошибки, которую должен отметить игрок.
-        /// Тип ошибки всегда помечается в начале строки в [] скобках.
-        /// </summary>
-        /// <param name="label"></param>
-        /// <returns>Label с текстом без наименования ошибки в [] скобках</returns>
         private Label ReadMistakeName(Label label)
         {
             var result = new StringBuilder();
@@ -279,9 +263,10 @@ namespace Rewrite_It
 
             void CreateTitle(string text) =>
                 graphics.DrawString(text,
-                        new Font(StringStyle.FontFamily, 19, FontStyle.Bold),
-                        StringStyle.Brush, new Rectangle(15, 90, 500, 70),
-                        new StringFormat() { Alignment = StringAlignment.Center });
+                                    new Font(StringStyle.FontFamily, 19, FontStyle.Bold),
+                                    StringStyle.Brush,
+                                    new Rectangle(15, 90, 500, 70),
+                                    new StringFormat() { Alignment = StringAlignment.Center });
         }
     }
 }
