@@ -21,7 +21,7 @@ namespace Rewrite_It
         /// </summary>
         private readonly Action<Label[]> createEventClickForTextAreas;
 
-        private Control.ControlCollection controls;
+        private readonly Control.ControlCollection controls;
 
         //private readonly Action<Label[]> createEventClickForMistakeAreas;
 
@@ -47,15 +47,16 @@ namespace Rewrite_It
         /// <summary>
         /// Текщая открытая вкладка в книге
         /// </summary>
-        public Tabs CurrentBookMode { get; private set; }
+        public Tabs CurrentBookMode { get; private set; } = Tabs.Guide;
 
-        public Point ExitButtonLocation { get { return new Point(1490, 30); } }
+        public Point ExitButtonLocation { get; set; } = new Point(1490, 30);
 
-        public Point BookLocation { get { return new Point(-10, 10); } }
+        public Point BookLocation { get; set; } = new Point(-10, 10);
 
-        public static Point PaperLocation { get { return new Point(650, 0); } }
+        public Point PaperLocation { get; set; } = new Point(650, 0);
 
-        public Dictionary<int, (Mistakes, Label, string)> MistakesList { get; }
+        public Dictionary<int, (Mistakes, Label, string)> MistakesList { get; } 
+            = new Dictionary<int, (Mistakes, Label, string)>();
 
         /// <summary>
         /// Хранит информацию о текстовых областях статьи.
@@ -63,11 +64,13 @@ namespace Rewrite_It
         /// Value.Item1 - ошибка, привязанная к данной области.
         /// Value.Item2 - сама область.
         /// </summary>
-        public Dictionary<int, (Mistakes, Label)> TextAreas { get; }
+        public Dictionary<int, (Mistakes, Label)> TextAreas { get; } 
+            = new Dictionary<int, (Mistakes, Label)>();
 
-        public Dictionary<int, (Mistakes, Label)> ExpectedMistakeAreas { get; }
+        public Dictionary<int, (Mistakes, Label)> ExpectedMistakeAreas { get; } 
+            = new Dictionary<int, (Mistakes, Label)>();
 
-        public Label SelectedTextArea { get; private set; }
+        public Label SelectedTextArea { get; private set; } = null;
 
         /// <summary>
         /// Цвет выбранной текстовой области
@@ -86,15 +89,10 @@ namespace Rewrite_It
             createEventClickForTextAreas = eventTextAreas;
             //createEventClickForMistakeAreas = eventMistakeAreas;
             BookModes = bookFrames;
-            CurrentBookMode = Tabs.Guide;
-            MistakesList = new Dictionary<int, (Mistakes, Label, string)>();
             AddNewMistake(Mistakes.NoNumbers, "Отсутствие чисел", "Однозначные числа (меньше 10) записываются буквами," +
                 " многозначные — в цифровой форме. \n В цифровой форме пишутся все даты. " +
                 "\n Цифровая форма при написании однозначных чисел используется," +
                 " когда однозначные целые числа образуют сочетание с единицами физических величин, денежными единицами и т. п.");
-            TextAreas = new Dictionary<int, (Mistakes, Label)>();
-            ExpectedMistakeAreas = new Dictionary<int, (Mistakes, Label)>();
-            SelectedTextArea = null;
             this.colorSelectedTextArea = colorSelectedTextArea;
         }
 
@@ -169,13 +167,12 @@ namespace Rewrite_It
         {
             var labelX = PaperLocation.X + 10;
             var labelY = PaperLocation.Y + 5;
+
+            CreateAndAlignLabel(textFile.ReadLine(), ContentAlignment.MiddleCenter);
+            CreateAndAlignLabel(textFile.ReadLine(), ContentAlignment.MiddleRight);
+            CreateAndAlignLabel(textFile.ReadLine(), ContentAlignment.MiddleRight);
+
             var line = textFile.ReadLine();
-
-            CreateLabel(textFile, ContentAlignment.MiddleCenter, labelX, ref labelY);
-            CreateLabel(textFile, ContentAlignment.MiddleRight, labelX, ref labelY);
-            CreateLabel(textFile, ContentAlignment.MiddleRight, labelX, ref labelY);
-
-            //Следующие области текста автоматически выравниваются по левому краю
             while (line != null)
             {
                 var area = GetLabel(line, new Point(labelX, labelY));
@@ -185,18 +182,14 @@ namespace Rewrite_It
             }
             createEventClickForTextAreas(TextAreas.Values.Select(tuple => tuple.Item2).ToArray());
 
-            void CreateLabel(StreamReader _textFile,
-                             ContentAlignment align,
-                             int x,
-                             ref int y)
+            void CreateAndAlignLabel(string text, ContentAlignment align)
             {
                 var image = Properties.Resources.PaperBackground;
-                var text = GetLabel(_textFile.ReadLine(), new Point(x, y));
-                text.Location = align == ContentAlignment.MiddleCenter
-                    ? new Point((PaperLocation.X + image.Width - text.Width) / 2 + 115, text.Location.Y)
-                    : new Point(PaperLocation.X + image.Width - text.Width - 420, text.Location.Y);
-                text.TextAlign = align;
-                TextAreas.Add(text.GetHashCode(), (Mistakes.None, text));
+                var label = GetLabel(text, new Point(labelX, labelY));
+                label.Location = align == ContentAlignment.MiddleCenter
+                    ? new Point((PaperLocation.X + image.Width - label.Width) / 2 + 115, label.Location.Y)
+                    : new Point(PaperLocation.X + image.Width - label.Width - 420, label.Location.Y);
+                TextAreas.Add(label.GetHashCode(), (Mistakes.None, label));
             }
 
             Label GetLabel(string text, Point location)
