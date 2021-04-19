@@ -37,23 +37,19 @@ namespace Rewrite_It
         {
             InitializeComponent();
             DoubleBuffered = true;
-            var fontCollection = new PrivateFontCollection();
-            fontCollection.AddFontFile("PixelGeorgia.ttf");
-            StringStyle.SetFontFamily(fontCollection.Families[0]);
-            StringStyle.SetSolidBrush(new SolidBrush(Color.Black));
-            StringStyle.SetFont(new Font(StringStyle.FontFamily, 16));
-
+            SetStyleFont("PixelGeorgia.ttf", Color.Black, 16);
             currentInterface = Interfaces.MainOffice;
 
+            Action updateGraphics = () => Invalidate();
             checkMode = new CheckMode(new Dictionary<CheckMode.Tabs, Bitmap>
             {
                 [CheckMode.Tabs.Guide] = new Bitmap(Properties.Resources.HeadBookTab1),
                 [CheckMode.Tabs.MistakesList] = new Bitmap(Properties.Resources.HeadBookTab2),
                 [CheckMode.Tabs.CensoredList] = new Bitmap(Properties.Resources.HeadBookTab3)
             },
-            () => Invalidate(),
-            labels => CreateEventClickForTextAreas(labels),
+            updateGraphics,
             Color.CornflowerBlue,
+            Color.DarkSlateGray,
             Controls);
 
             office = new MainOffice(
@@ -82,7 +78,7 @@ namespace Rewrite_It
                      [Character.NamesImages.Women1] = Properties.Resources.Women1
                  },
                  Character.NamesImages.Women1),
-                 () => Invalidate(),
+                 updateGraphics,
                  checkMode);
             AddLabelsToControls(office.Option1, office.Option2);
 
@@ -90,6 +86,15 @@ namespace Rewrite_It
             timerGraphicsUpdate.Tick += new EventHandler(Update);
 
             office.EnterCharacter(office.Person, timerGraphicsUpdate, new Point(150, 150));
+        }
+
+        private void SetStyleFont(string fileFont, Color color, int size)
+        {
+            var fontCollection = new PrivateFontCollection();
+            fontCollection.AddFontFile(fileFont);
+            StringStyle.SetFontFamily(fontCollection.Families[0]);
+            StringStyle.SetSolidBrush(new SolidBrush(color));
+            StringStyle.SetFont(new Font(StringStyle.FontFamily, size));
         }
 
         private void Update(object sender, EventArgs e)
@@ -144,12 +149,13 @@ namespace Rewrite_It
         {
             if (IsClickedArea(e, office.DocumentLocation, new Point(Properties.Resources.Document.Size)))
                 ChangeInterface(Properties.Resources.CheckModeBackground, Interfaces.CheckMode);
+            if (checkMode.CheckHasMatching()) return;
             if (IsClickedArea(e, checkMode.ExitButtonLocation, new Point(Properties.Resources.ExitFromCheckMode.Size)))
                 ChangeInterface(Properties.Resources.OfficeBackground, Interfaces.MainOffice);
             if (IsClickedArea(e, new Point(checkMode.BookLocation.X + 143, checkMode.BookLocation.Y + 6), new Point(112, 56)))
-                checkMode.ChangeBookMode(CheckMode.Tabs.MistakesList);
+                checkMode.UpdateStatus(CheckMode.Tabs.MistakesList);
             if (IsClickedArea(e, new Point(checkMode.BookLocation.X + 28, checkMode.BookLocation.Y + 6), new Point(112, 56)))
-                checkMode.ChangeBookMode(CheckMode.Tabs.Guide);
+                checkMode.UpdateStatus(CheckMode.Tabs.Guide);
 
             Invalidate();
         }
@@ -173,46 +179,13 @@ namespace Rewrite_It
             if (currentInterface == Interfaces.MainOffice)
                 AddLabelsToControls(office.Option1, office.Option2);
             if (currentInterface == Interfaces.CheckMode)
-                AddLabelsToControls(
-                    checkMode.TextAreas.Values
-                    .Select(tuple => tuple.Item2)
-                    .ToArray());
+                checkMode.UpdateStatus(checkMode.CurrentBookMode);
         }
 
         public void AddLabelsToControls(params Label[] labels)
         {
             foreach (var label in labels)
                 Controls.Add(label);
-        }
-
-        public void CreateEventClickForTextAreas(Label[] labels)
-        {
-            for (var i = 0; i < labels.Length; i++)
-                labels[i].Click += ((sender, e) =>
-                {
-                    var label = sender as Label;
-                    checkMode.SetSelectedTextArea(label);
-                });
-        }
-
-        public void CreateEventClickForMistakeAreas(Label[] labels)
-        {
-            for (var i = 0; i < labels.Length; i++)
-            {
-                labels[i].MouseHover += ((sender, e) =>
-                {
-                    var label = sender as Label;
-                    var description = new Label()
-                    {
-                        Text = checkMode.MistakesList[label.GetHashCode()].Item3,
-                        Font = StringStyle.Font,
-                        AutoSize = true,
-                        BorderStyle = BorderStyle.FixedSingle,
-                        Location = new Point(563, 147)
-                    };
-                    AddLabelsToControls(description);
-                });
-            }
         }
     }
 }
