@@ -92,7 +92,6 @@ namespace Rewrite_It
         /// Цвет выбранной текстовой области
         /// </summary>
         private readonly Color colorSelectedTextArea;
-        //private readonly Color colorPopUpWindowText;
         private int currentMistakeY = 170;
         private readonly Label textDescription;
         private readonly Label mistakeDescription;
@@ -109,7 +108,6 @@ namespace Rewrite_It
             AddNewMistake(Mistakes.NoNumbers);
             AddNewMistake(Mistakes.IncorrectDefinitionTargetAudience);
             this.colorSelectedTextArea = colorSelectedTextArea;
-            //this.colorPopUpWindowText = colorPopUpWindowText;
             textDescription = new Label()
             {
                 Font = StringStyle.Font,

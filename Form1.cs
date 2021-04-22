@@ -38,7 +38,7 @@ namespace Rewrite_It
             InitializeComponent();
             DoubleBuffered = true;
             SetStyleFont("PixelGeorgia.ttf", Color.Black, 16);
-            currentInterface = Interfaces.MainOffice;
+            //currentInterface = Interfaces.MainOffice;
 
             Action updateGraphics = () => Invalidate();
             checkMode = new CheckMode(new Dictionary<CheckMode.Tabs, Bitmap>
@@ -60,7 +60,6 @@ namespace Rewrite_It
                      AutoSize = true,
                      ForeColor = Color.Green,
                      BorderStyle = BorderStyle.FixedSingle,
-                     TextAlign = ContentAlignment.MiddleCenter,
                      Location = new Point(-500, 0)
                  },
                  new Label
@@ -70,7 +69,6 @@ namespace Rewrite_It
                      AutoSize = true,
                      ForeColor = Color.Red,
                      BorderStyle = BorderStyle.FixedSingle,
-                     TextAlign = ContentAlignment.MiddleCenter,
                      Location = new Point(-500, 0)
                  },
                  new Character(new Dictionary<Character.NamesImages, Image>()
@@ -80,7 +78,7 @@ namespace Rewrite_It
                  Character.NamesImages.Women1),
                  updateGraphics,
                  checkMode);
-            AddLabelsToControls(office.Option1, office.Option2);
+            ChangeInterface(Properties.Resources.OfficeBackground, Interfaces.MainOffice);
 
             timerGraphicsUpdate = new Timer { Interval = 10 };
             timerGraphicsUpdate.Tick += new EventHandler(Update);
