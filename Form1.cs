@@ -15,6 +15,7 @@ namespace Rewrite_It
         MainMenu,
         MainOffice,
         CheckMode,
+        Email,
         DayEnd
     }
 

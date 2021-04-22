@@ -12,7 +12,7 @@ namespace Rewrite_It
         // И наоборот, если мы не хотим рисовать Label-ы на форме, мы убираем их из controls с помощью метода Remove
         // Следует написать методы, которые добавляют или убирают из controls все письма из letters.
         // Эти методы будут вызываться при смене игрового интерфейса в классе Form1.
-        // Вход и выход из эл. почты писать не нужно.
+        // Вход и выход из эл. почты писать не нужно!
         private readonly Control.ControlCollection controls;
 
         private readonly List<Label> letters = new List<Label>();

@@ -16,11 +16,6 @@ namespace Rewrite_It
         /// </summary>
         private readonly Action updateGraphics;
 
-        /// <summary>
-        /// Делегат, создающий событие клика мыши на области текста
-        /// </summary>
-        //private readonly Action<Label[]> createEventClickForTextAreas;
-
         private readonly Control.ControlCollection controls;
 
         //private readonly Action<Label[]> createEventClickForMistakeAreas;
@@ -182,8 +177,7 @@ namespace Rewrite_It
                         " когда однозначные целые числа образуют сочетание с единицами физических величин, денежными единицами и т. п.");
                 case Mistakes.IncorrectDefinitionTargetAudience: return
                         ("Неверное таргетирование целевой аудитории",
-                        "Вы должны четко понимать группу людей, для которой пишете свое послание." +
-                        "\nПромах по целевой аудитории является серьёзным ударом по убедительности");
+                        "...");
             }
             throw new ArgumentException();
         }
