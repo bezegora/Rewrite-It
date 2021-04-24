@@ -48,6 +48,8 @@
   <ItemGroup>
     <Compile Include="Character.cs" />
     <Compile Include="CheckMode.cs" />
+    <Compile Include="GameEvents.cs" />
+    <Compile Include="LevelParameters.cs" />
     <Compile Include="Email.cs" />
     <Compile Include="StringStyle.cs" />
     <Compile Include="MainOffice.cs" />

@@ -18,22 +18,6 @@ namespace Rewrite_It
 
         private readonly Control.ControlCollection controls;
 
-        //private readonly Action<Label[]> createEventClickForMistakeAreas;
-
-        /// <summary>
-        /// Содержит список интерактивных текстовых кнопок в перечне ошибок.
-        /// Элемент списка - номер страницы в книге.
-        /// Элемент массива внутри списка - очередной Label, который рисуется на текущей странице в книге.
-        /// </summary>
-        public List<Label[]> ErrorsListOptions { get; }
-
-        /// <summary>
-        /// Содержит список интерактивных текстовых кнопок в цензурном перечне.
-        /// Элемент списка - номер страницы в книге.
-        /// Элемент массива внутри списка - очередной Label, который рисуется на текущей странице в книге.
-        /// </summary>
-        public List<Label[]> CensoredListOptions { get; }
-
         /// <summary>
         /// Содержит фреймы книги с соответствующими открытыми вкладками
         /// </summary>
@@ -50,6 +34,13 @@ namespace Rewrite_It
 
         public Point PaperLocation { get; set; } = new Point(650, 0);
 
+        /// <summary>
+        /// Соедржит все области с типами ошибок, которые рисуются непросредственно на форме.
+        /// Key - идентификатор (HashCode) области.
+        /// Value.Item1 - ошибка, относящаящая к данной области.
+        /// Value.Item2 - сама область.
+        /// Value.Item3 - описание ошибки.
+        /// </summary>
         public Dictionary<int, (Mistakes, Label, string)> MistakesList { get; } 
             = new Dictionary<int, (Mistakes mistake, Label area, string description)>();
 
@@ -81,6 +72,10 @@ namespace Rewrite_It
         /// </summary>
         public Label SelectedTextArea { get; private set; } = null;
 
+        /// <summary>
+        /// Кортеж областей, которые сопоставляются прямо сейчас.
+        /// Если оба элемента != null, любые клики мышью по объектам игнорируются.
+        /// </summary>
         public (Label, Label) IsMatching { get; private set; } = (null, null);
 
         /// <summary>
@@ -88,8 +83,16 @@ namespace Rewrite_It
         /// </summary>
         private readonly Color colorSelectedTextArea;
         private int currentMistakeY = 170;
-        private readonly Label textDescription;
-        private readonly Label mistakeDescription;
+
+        /// <summary>
+        /// Описание текстовой области.
+        /// </summary>
+        private readonly Label descriptionTextArea;
+
+        /// <summary>
+        /// Описание ошибки.
+        /// </summary>
+        private readonly Label descriptionMistake;
 
         public CheckMode(Dictionary<Tabs, Bitmap> bookFrames,
                          Action update,
@@ -103,7 +106,7 @@ namespace Rewrite_It
             AddNewMistake(Mistakes.NoNumbers);
             AddNewMistake(Mistakes.IncorrectDefinitionTargetAudience);
             this.colorSelectedTextArea = colorSelectedTextArea;
-            textDescription = new Label()
+            descriptionTextArea = new Label()
             {
                 Font = StringStyle.Font,
                 ForeColor = colorPopUpWindowText,
@@ -111,7 +114,7 @@ namespace Rewrite_It
                 BorderStyle = BorderStyle.FixedSingle,
                 MaximumSize = new Size(500, 0)
             };
-            mistakeDescription = new Label()
+            descriptionMistake = new Label()
             {
                 Font = StringStyle.Font,
                 ForeColor = colorPopUpWindowText,
@@ -147,9 +150,10 @@ namespace Rewrite_It
         }
 
         /// <summary>
-        /// Устанавливает текущую открытую вкладку книги
+        /// Устанавливает текущую открытую вкладку книги.
+        /// Обновляет элементы управления для данного интерфейса.
         /// </summary>
-        /// <param name="tab"></param>
+        /// <param name="tab">Вкладка, которую нужно открыть</param>
         public void UpdateStatus(Tabs tab)
         {
             CurrentBookMode = tab;
@@ -165,6 +169,11 @@ namespace Rewrite_It
             updateGraphics();
         }
 
+        /// <summary>
+        /// Возвращает информацию о существующем типе ошибки.
+        /// </summary>
+        /// <param name="mistake">Тип ошибки, информацию о которой нужно получить</param>
+        /// <returns>Кортеж, состоящий из названия и описания типа данной ошибки</returns>
         private (string name, string description) GetMistakeText(Mistakes mistake)
         {
             switch (mistake)
@@ -216,8 +225,17 @@ namespace Rewrite_It
             }
         }
 
+        /// <summary>
+        /// Устанавливает области, для которых нужно проиграть анимацию сопоставления.
+        /// </summary>
+        /// <param name="textArea"></param>
+        /// <param name="mistakeArea"></param>
         public void SetIsMatching(Label textArea = null, Label mistakeArea = null) => IsMatching = (textArea, mistakeArea);
 
+        /// <summary>
+        /// Проверяет, идёт ли прямо сейчас сопоставление областей.
+        /// </summary>
+        /// <returns></returns>
         public bool CheckHasMatching() => IsMatching.Item1 != null && IsMatching.Item2 != null;
 
         /// <summary>
@@ -237,7 +255,7 @@ namespace Rewrite_It
             }
             textArea.BackColor = colorSelectedTextArea;
             mistakeArea.BackColor = colorSelectedTextArea;
-            RemoveTextDescription(mistakeDescription);
+            RemoveTextDescription(descriptionMistake);
             SelectedMistakeAreas.Add(textArea.GetHashCode(), MistakesList[mistakeArea.GetHashCode()].Item1);
             SetIsMatching(textArea, mistakeArea);
             updateGraphics();
@@ -255,22 +273,28 @@ namespace Rewrite_It
             };
         }
 
+        /// <summary>
+        /// Отменает указание ошибки для текстовой области.
+        /// </summary>
+        /// <param name="textArea">Текстовая область, из которой нужно убрать указание ошибки</param>
         private void Undo(Label textArea)
         {
             SelectedMistakeAreas.Remove(textArea.GetHashCode());
             textArea.ForeColor = StringStyle.Brush.Color;
             SetSelectedTextArea(null);
-            RemoveTextDescription(textDescription);
+            RemoveTextDescription(descriptionTextArea);
         }
 
+        /// <summary>
+        /// Заставлет исчезнуть всплывающее окно с описанием.
+        /// </summary>
+        /// <param name="popUpWindow"></param>
         private void RemoveTextDescription(Label popUpWindow) => controls.Remove(popUpWindow);
 
         /// <summary>
         /// Добавляет новую область с ошибкой в словарь, из которого эти области рисуются на форме последовательно друг за другом.
         /// </summary>
         /// <param name="mistake"></param>
-        /// <param name="name"></param>
-        /// <param name="description"></param>
         public void AddNewMistake(Mistakes mistake)
         {
             var (name, description) = GetMistakeText(mistake);
@@ -378,6 +402,10 @@ namespace Rewrite_It
             return label;
         }
 
+        /// <summary>
+        /// Создаёт событие клика мышью по заданным текстовым областям.
+        /// </summary>
+        /// <param name="labels"></param>
         private void CreateEventClickForAreas(Label[] labels)
         {
             for (var i = 0; i < labels.Length; i++)
@@ -395,6 +423,10 @@ namespace Rewrite_It
             }
         }
 
+        /// <summary>
+        /// Создаёт событие наведения курсора мыши на заданные области с типами ошибок.
+        /// </summary>
+        /// <param name="labels"></param>
         private void CreateEventEnteringMouseOnMistakeAreas(Label[] labels)
         {
             for (var i = 0; i < labels.Length; i++)
@@ -402,14 +434,18 @@ namespace Rewrite_It
                 labels[i].MouseEnter += (sender, e) =>
                 {
                     var label = sender as Label;
-                    mistakeDescription.Text = MistakesList[label.GetHashCode()].Item3;
-                    controls.Add(mistakeDescription);
-                    mistakeDescription.BringToFront();
+                    descriptionMistake.Text = MistakesList[label.GetHashCode()].Item3;
+                    controls.Add(descriptionMistake);
+                    descriptionMistake.BringToFront();
                 };
-                labels[i].MouseLeave += (sender, e) => controls.Remove(mistakeDescription);
+                labels[i].MouseLeave += (sender, e) => controls.Remove(descriptionMistake);
             }
         }
 
+        /// <summary>
+        /// Создаёт событие наведения курсора мыши на заданные текстовые области.
+        /// </summary>
+        /// <param name="labels"></param>
         private void CreateEventEnteringMouseOnTextAreas(Label[] labels)
         {
             for (var i = 0; i < labels.Length; i++)
@@ -418,17 +454,17 @@ namespace Rewrite_It
                 {
                     var label = sender as Label;
                     if (!SelectedMistakeAreas.ContainsKey(label.GetHashCode())) return;
-                    textDescription.Text = $"Помечено как:\n{GetMistakeText(SelectedMistakeAreas[label.GetHashCode()]).name}" +
+                    descriptionTextArea.Text = $"Помечено как:\n{GetMistakeText(SelectedMistakeAreas[label.GetHashCode()]).name}" +
                     "\n\nКликните ЛКМ, чтобы изменить" +
                     "\nКликните ПКМ для отмены";
-                    textDescription.Width = textDescription.PreferredWidth;
+                    descriptionTextArea.Width = descriptionTextArea.PreferredWidth;
                     var x = label.Location.X;
-                    if (x > 700) x = label.Location.X + label.Width - textDescription.Width;
-                    textDescription.Location = new Point(x, label.Location.Y + label.Height);
-                    controls.Add(textDescription);
-                    textDescription.BringToFront();
+                    if (x > 700) x = label.Location.X + label.Width - descriptionTextArea.Width;
+                    descriptionTextArea.Location = new Point(x, label.Location.Y + label.Height);
+                    controls.Add(descriptionTextArea);
+                    descriptionTextArea.BringToFront();
                 };
-                labels[i].MouseLeave += (sender, e) => RemoveTextDescription(textDescription);
+                labels[i].MouseLeave += (sender, e) => RemoveTextDescription(descriptionTextArea);
             }
         }
 

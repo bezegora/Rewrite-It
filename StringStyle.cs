@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace Rewrite_It
 {
+    /// <summary>
+    /// Класс стандартного стиля шрифта, используемого в игре.
+    /// </summary>
     static class StringStyle
     {
         /// <summary>

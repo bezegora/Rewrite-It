@@ -4,13 +4,14 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.Windows.Forms;
 using System.Linq;
+using System.IO;
 
 namespace Rewrite_It
 {
     /// <summary>
     /// Содержит все игровые интерфейсы
     /// </summary>
-    public enum Interfaces
+    public enum Interface
     {
         MainMenu,
         MainOffice,
@@ -24,24 +25,24 @@ namespace Rewrite_It
         /// <summary>
         /// Таймер, определяющий частоту перерисовки кадра
         /// </summary>
-        private readonly Timer timerGraphicsUpdate;
+        public static Timer TimerGraphicsUpdate { get; } = new Timer { Interval = 10 };
 
         /// <summary>
         /// Определяет текущий нарисованный в форме игровой интерфейс
         /// </summary>
-        private Interfaces currentInterface;
+        public static Interface CurrentInterface { get; private set; }
 
         private readonly MainOffice office;
         private readonly CheckMode checkMode;
+        private LevelParameters level;
 
         public Form1()
         {
             InitializeComponent();
             DoubleBuffered = true;
             SetStyleFont("PixelGeorgia.ttf", Color.Black, 16);
-            //currentInterface = Interfaces.MainOffice;
 
-            Action updateGraphics = () => Invalidate();
+            void updateGraphics() => Invalidate();
             checkMode = new CheckMode(new Dictionary<CheckMode.Tabs, Bitmap>
             {
                 [CheckMode.Tabs.Guide] = new Bitmap(Properties.Resources.HeadBookTab1),
@@ -78,13 +79,24 @@ namespace Rewrite_It
                  },
                  Character.NamesImages.Women1),
                  updateGraphics,
-                 checkMode);
-            ChangeInterface(Properties.Resources.OfficeBackground, Interfaces.MainOffice);
+                 //checkMode,
+                 Controls);
+            ChangeInterface(Properties.Resources.OfficeBackground, Interface.MainOffice);
 
-            timerGraphicsUpdate = new Timer { Interval = 10 };
-            timerGraphicsUpdate.Tick += new EventHandler(Update);
+            var events = new Queue<Action>();
+            // Меняйте местами следующие 2 строки, чтобы запускать соответствующие тесты.
+            events.Enqueue(GameEvents.Begin); // Тест прокрутки диалога
+            events.Enqueue(GameEvents.Article); // Тест проверки статьи
+            var articles = new List<StreamReader>()
+            {
+                new StreamReader(@"Articles\Marketing1.txt")
+            };
+            level = new LevelParameters(events, articles);
+            GameEvents.InitializeComponents(level, office, checkMode);
 
-            office.EnterCharacter(office.Person, timerGraphicsUpdate, new Point(150, 150));
+            TimerGraphicsUpdate.Tick += new EventHandler(Update);
+
+            office.EnterCharacter(office.Person, TimerGraphicsUpdate, new Point(150, 150));
         }
 
         private void SetStyleFont(string fileFont, Color color, int size)
@@ -102,19 +114,19 @@ namespace Rewrite_It
             var person = office.Person;
             if (person.IsMoving)
             {
-                if (person.Direction == Character.MovingDirections.Left)
+                if (person.Direction is Character.MovingDirections.Left)
                 {
                     person.Location = new Point(person.Location.X + 15, person.Location.Y);
                     if (person.Location.X > 530)
                     {
-                        office.StopCharacter(person, timerGraphicsUpdate);
-                        office.StartEvent(MainOffice.Events.Article);
+                        office.StopCharacter(person, TimerGraphicsUpdate);
+                        level.Events.Dequeue()();
                     }
                 }
-                else if (person.Direction == Character.MovingDirections.Right)
+                else if (person.Direction is Character.MovingDirections.Right)
                 {
                     person.Location = new Point(person.Location.X - 15, person.Location.Y);
-                    if (person.Location.X < -100) office.StopCharacter(person, timerGraphicsUpdate);
+                    if (person.Location.X < -100) office.StopCharacter(person, TimerGraphicsUpdate);
                 }
             }
         }
@@ -133,12 +145,12 @@ namespace Rewrite_It
 
         private void OnPaint(object sender, PaintEventArgs e)
         {
-            switch (currentInterface)
+            switch (CurrentInterface)
             {
-                case Interfaces.MainOffice:
+                case Interface.MainOffice:
                     office.Paint(e);
                     break;
-                case Interfaces.CheckMode:
+                case Interface.CheckMode:
                     checkMode.Paint(e);
                     break;
             }
@@ -147,10 +159,10 @@ namespace Rewrite_It
         private void OnMouseClick(object sender, MouseEventArgs e)
         {
             if (IsClickedArea(e, office.DocumentLocation, new Point(Properties.Resources.Document.Size)))
-                ChangeInterface(Properties.Resources.CheckModeBackground, Interfaces.CheckMode);
+                ChangeInterface(Properties.Resources.CheckModeBackground, Interface.CheckMode);
             if (checkMode.CheckHasMatching()) return;
             if (IsClickedArea(e, checkMode.ExitButtonLocation, new Point(Properties.Resources.ExitFromCheckMode.Size)))
-                ChangeInterface(Properties.Resources.OfficeBackground, Interfaces.MainOffice);
+                ChangeInterface(Properties.Resources.OfficeBackground, Interface.MainOffice);
             if (IsClickedArea(e, new Point(checkMode.BookLocation.X + 143, checkMode.BookLocation.Y + 6), new Point(112, 56)))
                 checkMode.UpdateStatus(CheckMode.Tabs.MistakesList);
             if (IsClickedArea(e, new Point(checkMode.BookLocation.X + 28, checkMode.BookLocation.Y + 6), new Point(112, 56)))
@@ -169,16 +181,14 @@ namespace Rewrite_It
         /// </summary>
         /// <param name="backgroundImage">Фоновое изображение интерфейса</param>
         /// <param name="_interface">Новый интерфейс</param>
-        public void ChangeInterface(Image backgroundImage, Interfaces _interface)
+        public void ChangeInterface(Image backgroundImage, Interface _interface)
         {
-            currentInterface = _interface;
+            CurrentInterface = _interface;
             this.BackgroundImage = backgroundImage;
             checkMode.SetSelectedTextArea(null);
             Controls.Clear();
-            if (currentInterface == Interfaces.MainOffice)
-                AddLabelsToControls(office.Option1, office.Option2);
-            if (currentInterface == Interfaces.CheckMode)
-                checkMode.UpdateStatus(checkMode.CurrentBookMode);
+            if (CurrentInterface is Interface.MainOffice) office.UpdateStatus();
+            if (CurrentInterface is Interface.CheckMode) checkMode.UpdateStatus(checkMode.CurrentBookMode);
         }
 
         public void AddLabelsToControls(params Label[] labels)

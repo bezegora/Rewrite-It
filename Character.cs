@@ -3,10 +3,12 @@ using System.Drawing;
 
 namespace Rewrite_It
 {
-    class Character
+    public class Character
     {
         /// <summary>
-        /// Содержит все изображения персонажей. Key - название изображения. Value - само изображение
+        /// Содержит все изображения персонажей. 
+        /// Key - название изображения. 
+        /// Value - само изображение
         /// </summary>
         public Dictionary<NamesImages, Image> Images { get; }
 
