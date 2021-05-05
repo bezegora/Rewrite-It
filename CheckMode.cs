@@ -21,7 +21,7 @@ namespace Rewrite_It
         /// <summary>
         /// Содержит фреймы книги с соответствующими открытыми вкладками
         /// </summary>
-        public Dictionary<Tabs, Bitmap> BookModes { get; }
+        private Dictionary<Tabs, Bitmap> bookModes;
 
         /// <summary>
         /// Текщая открытая вкладка в книге
@@ -41,15 +41,15 @@ namespace Rewrite_It
         /// Value.Item2 - сама область.
         /// Value.Item3 - описание ошибки.
         /// </summary>
-        public Dictionary<int, (Mistakes, Label, string)> MistakesList { get; } 
-            = new Dictionary<int, (Mistakes mistake, Label area, string description)>();
+        private Dictionary<int, (MistakeType, Label, string)> mistakesList 
+            = new Dictionary<int, (MistakeType mistake, Label area, string description)>();
 
         /// <summary>
         /// Содержит все текстовые области, которые рисуются непросредственно на форме.
         /// Key - идентификатор (HashCode) области.
         /// Value - сама область.
         /// </summary>
-        public Dictionary<int, Label> TextAreas { get; } = new Dictionary<int, Label>();
+        private Dictionary<int, Label> textAreas = new Dictionary<int, Label>();
 
         /// <summary>
         /// Содержит ожидаемые ошибочные текстовые области, которые должен отметить игрок.
@@ -57,14 +57,14 @@ namespace Rewrite_It
         /// Key - идентификатор (HashCode) области.
         /// Value - ошибка, содержащаяся в данной области.
         /// </summary>
-        public Dictionary<int, Mistakes> ExpectedMistakeAreas { get; } = new Dictionary<int, Mistakes>();
+        public Dictionary<int, Mistake> ExpectedMistakeAreas { get; } = new Dictionary<int, Mistake>();
 
         /// <summary>
         /// Содержит выбранные игроком ошибочные области текста.
         /// Key - идентификатор (HashCode) области.
         /// Value - ошибка, которую выбрал игрок для данной области.
         /// </summary>
-        public Dictionary<int, Mistakes> SelectedMistakeAreas { get; } = new Dictionary<int, Mistakes>();
+        public Dictionary<int, Mistake> SelectedMistakeAreas { get; } = new Dictionary<int, Mistake>();
 
         /// <summary>
         /// Текущая выбранная область текста.
@@ -102,9 +102,9 @@ namespace Rewrite_It
         {
             this.controls = controls;
             updateGraphics = update;
-            BookModes = bookFrames;
-            AddNewMistake(Mistakes.NoNumbers);
-            AddNewMistake(Mistakes.IncorrectDefinitionTargetAudience);
+            bookModes = bookFrames;
+            AddNewMistake(MistakeType.NoNumbers);
+            AddNewMistake(MistakeType.IncorrectDefinitionTargetAudience);
             this.colorSelectedTextArea = colorSelectedTextArea;
             descriptionTextArea = new Label()
             {
@@ -124,9 +124,9 @@ namespace Rewrite_It
                 MaximumSize = new Size(600, 0)
             };
 
-            var mistakesList = MistakesList.Values.Select(tuple => tuple.Item2).ToArray();
-            CreateEventEnteringMouseOnMistakeAreas(mistakesList);
-            CreateEventClickForAreas(mistakesList);
+            var mistakes = mistakesList.Values.Select(tuple => tuple.Item2).ToArray();
+            CreateEventEnteringMouseOnMistakeAreas(mistakes);
+            CreateEventClickForAreas(mistakes);
         }
 
         /// <summary>
@@ -140,16 +140,6 @@ namespace Rewrite_It
         }
 
         /// <summary>
-        /// Содержит все виды ошибок, которые могут встретиться в тексте
-        /// </summary>
-        public enum Mistakes
-        {
-            None,
-            NoNumbers,
-            IncorrectDefinitionTargetAudience
-        }
-
-        /// <summary>
         /// Устанавливает текущую открытую вкладку книги.
         /// Обновляет элементы управления для данного интерфейса.
         /// </summary>
@@ -157,15 +147,15 @@ namespace Rewrite_It
         public void UpdateStatus(Tabs tab)
         {
             CurrentBookMode = tab;
-            var listMistakeLabels = MistakesList.Values.Select(tuple => tuple.Item2);
+            var listMistakeLabels = mistakesList.Values.Select(tuple => tuple.Item2);
             foreach (var e in listMistakeLabels) controls.Remove(e);
-            if (SelectedTextArea != null && MistakesList.ContainsKey(SelectedTextArea.GetHashCode()))
+            if (SelectedTextArea != null && mistakesList.ContainsKey(SelectedTextArea.GetHashCode()))
                 SelectedTextArea = null;
             if (tab == Tabs.MistakesList)
             {
                 foreach (var e in listMistakeLabels) controls.Add(e);
             }
-            foreach (var e in TextAreas.Values) controls.Add(e);
+            foreach (var e in textAreas.Values) controls.Add(e);
             updateGraphics();
         }
 
@@ -174,17 +164,17 @@ namespace Rewrite_It
         /// </summary>
         /// <param name="mistake">Тип ошибки, информацию о которой нужно получить</param>
         /// <returns>Кортеж, состоящий из названия и описания типа данной ошибки</returns>
-        private (string name, string description) GetMistakeText(Mistakes mistake)
+        private (string name, string description) GetMistakeText(MistakeType mistake)
         {
             switch (mistake)
             {
-                case Mistakes.NoNumbers: return
+                case MistakeType.NoNumbers: return
                         ("Отсутствие чисел",
                         "Однозначные числа (меньше 10) записываются буквами," +
                         " многозначные — в цифровой форме.\n\nВ цифровой форме пишутся все даты." +
                         "\n\nЦифровая форма при написании однозначных чисел используется," +
                         " когда однозначные целые числа образуют сочетание с единицами физических величин, денежными единицами и т. п.");
-                case Mistakes.IncorrectDefinitionTargetAudience: return
+                case MistakeType.IncorrectDefinitionTargetAudience: return
                         ("Неверное таргетирование целевой аудитории",
                         "Вы должны четко понимать группу людей, для которой пишете свое послание." +
                         "\nПромах по целевой аудитории является серьёзным ударом по убедительности");
@@ -203,9 +193,9 @@ namespace Rewrite_It
             {
                 var selectedAreaHash = SelectedTextArea.GetHashCode();
                 var nextAreaHash = nextArea.GetHashCode();
-                if ((MistakesList.ContainsKey(selectedAreaHash) && TextAreas.ContainsKey(nextAreaHash)))
+                if ((mistakesList.ContainsKey(selectedAreaHash) && textAreas.ContainsKey(nextAreaHash)))
                     Match(nextArea, SelectedTextArea);
-                else if (TextAreas.ContainsKey(selectedAreaHash) && MistakesList.ContainsKey(nextAreaHash))
+                else if (textAreas.ContainsKey(selectedAreaHash) && mistakesList.ContainsKey(nextAreaHash))
                     Match(SelectedTextArea, nextArea);
                 else ChangeSelected();
                 return;
@@ -250,13 +240,13 @@ namespace Rewrite_It
             var mistakeHash = mistakeArea.GetHashCode();
             if (SelectedMistakeAreas.ContainsKey(textHash))
             {
-                if (SelectedMistakeAreas[textHash] == MistakesList[mistakeHash].Item1) return;
+                if (SelectedMistakeAreas[textHash].Type == mistakesList[mistakeHash].Item1) return;
                 SelectedMistakeAreas.Remove(textHash);
             }
             textArea.BackColor = colorSelectedTextArea;
             mistakeArea.BackColor = colorSelectedTextArea;
             RemoveTextDescription(descriptionMistake);
-            SelectedMistakeAreas.Add(textArea.GetHashCode(), MistakesList[mistakeArea.GetHashCode()].Item1);
+            SelectedMistakeAreas.Add(textArea.GetHashCode(), new Mistake(mistakesList[mistakeArea.GetHashCode()].Item1));
             SetIsMatching(textArea, mistakeArea);
             updateGraphics();
             var wait = new Timer() { Interval = 1000 };
@@ -295,7 +285,7 @@ namespace Rewrite_It
         /// Добавляет новую область с ошибкой в словарь, из которого эти области рисуются на форме последовательно друг за другом.
         /// </summary>
         /// <param name="mistake"></param>
-        public void AddNewMistake(Mistakes mistake)
+        public void AddNewMistake(MistakeType mistake)
         {
             var (name, description) = GetMistakeText(mistake);
             var label = new Label()
@@ -311,7 +301,7 @@ namespace Rewrite_It
             label.Width = label.PreferredWidth;
             label.Height = label.PreferredHeight;
             currentMistakeY += label.Height + 7;
-            MistakesList.Add(label.GetHashCode(), (mistake, label, description));
+            mistakesList.Add(label.GetHashCode(), (mistake, label, description));
         }
 
         /// <summary>
@@ -332,11 +322,11 @@ namespace Rewrite_It
             {
                 var area = GetLabel(line, new Point(labelX, labelY));
                 if (area.Text[0] == '[') area = ReadMistakeName(area);
-                TextAreas.Add(area.GetHashCode(), area);
+                textAreas.Add(area.GetHashCode(), area);
                 line = textFile.ReadLine();
             }
-            CreateEventClickForAreas(TextAreas.Values.ToArray());
-            CreateEventEnteringMouseOnTextAreas(TextAreas.Values.ToArray());
+            CreateEventClickForAreas(textAreas.Values.ToArray());
+            CreateEventEnteringMouseOnTextAreas(textAreas.Values.ToArray());
 
             void CreateAndAlignLabel(string text, ContentAlignment align)
             {
@@ -345,7 +335,7 @@ namespace Rewrite_It
                 label.Location = align == ContentAlignment.MiddleCenter
                     ? new Point((PaperLocation.X + image.Width - label.Width) / 2 + 115, label.Location.Y)
                     : new Point(PaperLocation.X + image.Width - label.Width - 420, label.Location.Y);
-                TextAreas.Add(label.GetHashCode(), label);
+                textAreas.Add(label.GetHashCode(), label);
             }
 
             Label GetLabel(string text, Point location)
@@ -369,19 +359,32 @@ namespace Rewrite_It
         }
 
         /// <summary>
-        /// Считывает тип ошибки, который дан в начале строки в квадратных скобках []
+        /// Считывает тип ошибки, который дан в начале строки в квадратных скобках [].
+        /// Считывает, если есть, пояснение к ошибке, которое дано в квадратных скобках [] за типом ошибки после запятой ",".
+        /// Например: [NoNumbers, В сочетании с математическими единицами числа следует писать в цифровой форме] Десять процентов.
+        /// Здесь тип ошибки в строке - NoNumbers, а пояснение - "В сочетании с математическими единицами числа следует писать в цифровой форме".
+        /// Метод вернёт Label с текстом "Десять процентов."
         /// </summary>
         /// <param name="label">Label с текстом, содержащим тип ошибки в []</param>
         /// <returns>Label с убранной пометкой в []</returns>
         private Label ReadMistakeName(Label label)
         {
-            var result = new StringBuilder();
+            var mistakeName = new StringBuilder();
+            var explonation = new StringBuilder();
             var index = 1;
+            var wasSeparator = false;
             try
             {
                 while (label.Text[index] != ']')
                 {
-                    result.Append(label.Text[index]);
+                    if (label.Text[index] == ',' && !wasSeparator)
+                    {
+                        wasSeparator = true;
+                        index += 2;
+                        continue;
+                    }
+                    if (wasSeparator) explonation.Append(label.Text[index]);
+                    else mistakeName.Append(label.Text[index]);
                     index++;
                 }
             }
@@ -391,13 +394,10 @@ namespace Rewrite_It
             }
             index += 2;
 
-            switch (result.ToString())
-            {
-                case "NoNumbers":
-                    ExpectedMistakeAreas.Add(label.GetHashCode(), Mistakes.NoNumbers);
-                    break;
-                default: throw new ArgumentException("Такого типа ошибки не существует");
-            }
+            var mistake = new Mistake();
+            mistake.SetType(mistakeName.ToString());
+            mistake.Explanation = explonation.ToString();
+            ExpectedMistakeAreas.Add(label.GetHashCode(), mistake);
             label.Text = label.Text.Substring(index);
             return label;
         }
@@ -434,7 +434,7 @@ namespace Rewrite_It
                 labels[i].MouseEnter += (sender, e) =>
                 {
                     var label = sender as Label;
-                    descriptionMistake.Text = MistakesList[label.GetHashCode()].Item3;
+                    descriptionMistake.Text = mistakesList[label.GetHashCode()].Item3;
                     controls.Add(descriptionMistake);
                     descriptionMistake.BringToFront();
                 };
@@ -454,7 +454,7 @@ namespace Rewrite_It
                 {
                     var label = sender as Label;
                     if (!SelectedMistakeAreas.ContainsKey(label.GetHashCode())) return;
-                    descriptionTextArea.Text = $"Помечено как:\n{GetMistakeText(SelectedMistakeAreas[label.GetHashCode()]).name}" +
+                    descriptionTextArea.Text = $"Помечено как:\n{GetMistakeText(SelectedMistakeAreas[label.GetHashCode()].Type).name}" +
                     "\n\nКликните ЛКМ, чтобы изменить" +
                     "\nКликните ПКМ для отмены";
                     descriptionTextArea.Width = descriptionTextArea.PreferredWidth;
@@ -471,7 +471,7 @@ namespace Rewrite_It
         public void Paint(PaintEventArgs e)
         {
             var graphics = e.Graphics;
-            graphics.DrawImage(BookModes[CurrentBookMode], BookLocation.X, BookLocation.Y);
+            graphics.DrawImage(bookModes[CurrentBookMode], BookLocation.X, BookLocation.Y);
             graphics.DrawImage(Properties.Resources.ExitFromCheckMode, ExitButtonLocation.X, ExitButtonLocation.Y);
             graphics.DrawImage(Properties.Resources.PaperBackground, PaperLocation.X, PaperLocation.Y);
             if (IsMatching.Item1 != null)
