@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="Character.cs" />
     <Compile Include="CheckMode.cs" />
+    <Compile Include="DayEnd.cs" />
     <Compile Include="GameEvents.cs" />
     <Compile Include="LevelParameters.cs" />
     <Compile Include="Email.cs" />

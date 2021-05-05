@@ -34,6 +34,7 @@ namespace Rewrite_It
 
         private readonly MainOffice office;
         private readonly CheckMode checkMode;
+        private readonly DayEnd dayEnd;
         private LevelParameters level;
 
         public Form1()
@@ -113,7 +114,6 @@ namespace Rewrite_It
             Invalidate();
             var person = office.Person;
             if (person.IsMoving)
-            {
                 if (person.Direction is Character.MovingDirections.Left)
                 {
                     person.Location = new Point(person.Location.X + 15, person.Location.Y);
@@ -128,10 +128,9 @@ namespace Rewrite_It
                     person.Location = new Point(person.Location.X - 15, person.Location.Y);
                     if (person.Location.X < -100) office.StopCharacter(person, TimerGraphicsUpdate);
                 }
-            }
         }
 
-        private void Form1_Load(object sender, EventArgs e) 
+        private void Form1_Load(object sender, EventArgs e)
         {
             //this.FormBorderStyle = FormBorderStyle.None;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -152,6 +151,9 @@ namespace Rewrite_It
                     break;
                 case Interface.CheckMode:
                     checkMode.Paint(e);
+                    break;
+                case Interface.DayEnd:
+                    dayEnd.Paint(e);
                     break;
             }
         }
