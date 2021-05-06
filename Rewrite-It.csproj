@@ -48,6 +48,9 @@
   <ItemGroup>
     <Compile Include="Character.cs" />
     <Compile Include="CheckMode.cs" />
+    <Compile Include="Phrase.cs" />
+    <Compile Include="GameStats.cs" />
+    <Compile Include="Mistake.cs" />
     <Compile Include="DayEnd.cs" />
     <Compile Include="GameEvents.cs" />
     <Compile Include="LevelParameters.cs" />
@@ -127,6 +130,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\PaperBackground.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Man1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Woman1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Man2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Woman2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Woman3.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

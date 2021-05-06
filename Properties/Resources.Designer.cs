@@ -133,6 +133,26 @@ namespace Rewrite_It.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Man1 {
+            get {
+                object obj = ResourceManager.GetObject("Man1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Man2 {
+            get {
+                object obj = ResourceManager.GetObject("Man2", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Notebook {
             get {
                 object obj = ResourceManager.GetObject("Notebook", resourceCulture);
@@ -193,9 +213,29 @@ namespace Rewrite_It.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Women1 {
+        internal static System.Drawing.Bitmap Woman1 {
             get {
-                object obj = ResourceManager.GetObject("Women1", resourceCulture);
+                object obj = ResourceManager.GetObject("Woman1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Woman2 {
+            get {
+                object obj = ResourceManager.GetObject("Woman2", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Woman3 {
+            get {
+                object obj = ResourceManager.GetObject("Woman3", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

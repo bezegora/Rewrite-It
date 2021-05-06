@@ -5,19 +5,11 @@ using System.IO;
 using System.Windows.Forms;
 using System.Linq;
 using System.Text;
-using static System.Windows.Forms.Control;
 
 namespace Rewrite_It
 {
     public class CheckMode
     {
-        /// <summary>
-        /// Вызов метода Invalidate()
-        /// </summary>
-        private readonly Action updateGraphics;
-
-        private readonly Control.ControlCollection controls;
-
         /// <summary>
         /// Содержит фреймы книги с соответствующими открытыми вкладками
         /// </summary>
@@ -41,8 +33,8 @@ namespace Rewrite_It
         /// Value.Item2 - сама область.
         /// Value.Item3 - описание ошибки.
         /// </summary>
-        public Dictionary<int, (Mistakes, Label, string)> MistakesList { get; } 
-            = new Dictionary<int, (Mistakes mistake, Label area, string description)>();
+        public Dictionary<int, (MistakeType, Label, string)> MistakesList { get; } 
+            = new Dictionary<int, (MistakeType mistake, Label area, string description)>();
 
         /// <summary>
         /// Содержит все текстовые области, которые рисуются непросредственно на форме.
@@ -57,14 +49,14 @@ namespace Rewrite_It
         /// Key - идентификатор (HashCode) области.
         /// Value - ошибка, содержащаяся в данной области.
         /// </summary>
-        public Dictionary<int, Mistakes> ExpectedMistakeAreas { get; } = new Dictionary<int, Mistakes>();
+        public Dictionary<int, Mistake> ExpectedMistakeAreas { get; } = new Dictionary<int, Mistake>();
 
         /// <summary>
         /// Содержит выбранные игроком ошибочные области текста.
         /// Key - идентификатор (HashCode) области.
         /// Value - ошибка, которую выбрал игрок для данной области.
         /// </summary>
-        public Dictionary<int, Mistakes> SelectedMistakeAreas { get; } = new Dictionary<int, Mistakes>();
+        public Dictionary<int, Mistake> SelectedMistakeAreas { get; } = new Dictionary<int, Mistake>();
 
         /// <summary>
         /// Текущая выбранная область текста.
@@ -94,17 +86,17 @@ namespace Rewrite_It
         /// </summary>
         private readonly Label descriptionMistake;
 
+        private readonly Form1 form;
+
         public CheckMode(Dictionary<Tabs, Bitmap> bookFrames,
-                         Action update,
                          Color colorSelectedTextArea,
                          Color colorPopUpWindowText,
-                         ControlCollection controls)
+                         Form1 form)
         {
-            this.controls = controls;
-            updateGraphics = update;
+            this.form = form;
             BookModes = bookFrames;
-            AddNewMistake(Mistakes.NoNumbers);
-            AddNewMistake(Mistakes.IncorrectDefinitionTargetAudience);
+            AddNewMistake(MistakeType.NoNumbers);
+            AddNewMistake(MistakeType.IncorrectDefinitionTargetAudience);
             this.colorSelectedTextArea = colorSelectedTextArea;
             descriptionTextArea = new Label()
             {
@@ -140,16 +132,6 @@ namespace Rewrite_It
         }
 
         /// <summary>
-        /// Содержит все виды ошибок, которые могут встретиться в тексте
-        /// </summary>
-        public enum Mistakes
-        {
-            None,
-            NoNumbers,
-            IncorrectDefinitionTargetAudience
-        }
-
-        /// <summary>
         /// Устанавливает текущую открытую вкладку книги.
         /// Обновляет элементы управления для данного интерфейса.
         /// </summary>
@@ -158,15 +140,14 @@ namespace Rewrite_It
         {
             CurrentBookMode = tab;
             var listMistakeLabels = MistakesList.Values.Select(tuple => tuple.Item2);
-            foreach (var e in listMistakeLabels) controls.Remove(e);
+            foreach (var e in listMistakeLabels) form.Controls.Remove(e);
             if (SelectedTextArea != null && MistakesList.ContainsKey(SelectedTextArea.GetHashCode()))
                 SelectedTextArea = null;
             if (tab == Tabs.MistakesList)
             {
-                foreach (var e in listMistakeLabels) controls.Add(e);
+                foreach (var e in listMistakeLabels) form.Controls.Add(e);
             }
-            foreach (var e in TextAreas.Values) controls.Add(e);
-            updateGraphics();
+            foreach (var e in TextAreas.Values) form.Controls.Add(e);
         }
 
         /// <summary>
@@ -174,17 +155,17 @@ namespace Rewrite_It
         /// </summary>
         /// <param name="mistake">Тип ошибки, информацию о которой нужно получить</param>
         /// <returns>Кортеж, состоящий из названия и описания типа данной ошибки</returns>
-        private (string name, string description) GetMistakeText(Mistakes mistake)
+        public (string name, string description) GetMistakeText(MistakeType mistake)
         {
             switch (mistake)
             {
-                case Mistakes.NoNumbers: return
+                case MistakeType.NoNumbers: return
                         ("Отсутствие чисел",
                         "Однозначные числа (меньше 10) записываются буквами," +
                         " многозначные — в цифровой форме.\n\nВ цифровой форме пишутся все даты." +
                         "\n\nЦифровая форма при написании однозначных чисел используется," +
                         " когда однозначные целые числа образуют сочетание с единицами физических величин, денежными единицами и т. п.");
-                case Mistakes.IncorrectDefinitionTargetAudience: return
+                case MistakeType.IncorrectDefinitionTargetAudience: return
                         ("Неверное таргетирование целевой аудитории",
                         "Вы должны четко понимать группу людей, для которой пишете свое послание." +
                         "\nПромах по целевой аудитории является серьёзным ударом по убедительности");
@@ -250,21 +231,19 @@ namespace Rewrite_It
             var mistakeHash = mistakeArea.GetHashCode();
             if (SelectedMistakeAreas.ContainsKey(textHash))
             {
-                if (SelectedMistakeAreas[textHash] == MistakesList[mistakeHash].Item1) return;
+                if (SelectedMistakeAreas[textHash].Type == MistakesList[mistakeHash].Item1) return;
                 SelectedMistakeAreas.Remove(textHash);
             }
             textArea.BackColor = colorSelectedTextArea;
             mistakeArea.BackColor = colorSelectedTextArea;
             RemoveTextDescription(descriptionMistake);
-            SelectedMistakeAreas.Add(textArea.GetHashCode(), MistakesList[mistakeArea.GetHashCode()].Item1);
+            SelectedMistakeAreas.Add(textArea.GetHashCode(), new Mistake(MistakesList[mistakeArea.GetHashCode()].Item1));
             SetIsMatching(textArea, mistakeArea);
-            updateGraphics();
             var wait = new Timer() { Interval = 1000 };
             wait.Start();
             wait.Tick += (sender, e) =>
             {
                 SetIsMatching();
-                updateGraphics();
                 textArea.BackColor = Color.Transparent;
                 mistakeArea.BackColor = Color.Transparent;
                 textArea.ForeColor = Color.Red;
@@ -289,13 +268,13 @@ namespace Rewrite_It
         /// Заставлет исчезнуть всплывающее окно с описанием.
         /// </summary>
         /// <param name="popUpWindow"></param>
-        private void RemoveTextDescription(Label popUpWindow) => controls.Remove(popUpWindow);
+        private void RemoveTextDescription(Label popUpWindow) => form.Controls.Remove(popUpWindow);
 
         /// <summary>
         /// Добавляет новую область с ошибкой в словарь, из которого эти области рисуются на форме последовательно друг за другом.
         /// </summary>
         /// <param name="mistake"></param>
-        public void AddNewMistake(Mistakes mistake)
+        public void AddNewMistake(MistakeType mistake)
         {
             var (name, description) = GetMistakeText(mistake);
             var label = new Label()
@@ -330,8 +309,11 @@ namespace Rewrite_It
             var line = textFile.ReadLine();
             while (line != null)
             {
-                var area = GetLabel(line, new Point(labelX, labelY));
-                if (area.Text[0] == '[') area = ReadMistakeName(area);
+                var textArea = line;
+                Mistake mistake = null;
+                if (textArea[0] == '[') (textArea, mistake) = ReadMistakeName(textArea);
+                var area = GetLabel(textArea, new Point(labelX, labelY));
+                if (mistake != null) ExpectedMistakeAreas.Add(area.GetHashCode(), mistake);
                 TextAreas.Add(area.GetHashCode(), area);
                 line = textFile.ReadLine();
             }
@@ -369,19 +351,29 @@ namespace Rewrite_It
         }
 
         /// <summary>
-        /// Считывает тип ошибки, который дан в начале строки в квадратных скобках []
+        /// Считывает тип ошибки, который дан в начале строки в квадратных скобках [].
+        /// Считывает, если есть, пояснение к ошибке, которое дано после запятой в тех же квадратных скобках [].
         /// </summary>
-        /// <param name="label">Label с текстом, содержащим тип ошибки в []</param>
-        /// <returns>Label с убранной пометкой в []</returns>
-        private Label ReadMistakeName(Label label)
+        /// <param name="text">Текст, содержащий тип ошибки (и пояснение к ней, если есть) в []</param>
+        /// <returns>(Текст с убранной пометкой в [], Ошибка, содержащаяся в данном тексте)</returns>
+        private (string, Mistake) ReadMistakeName(string text)
         {
-            var result = new StringBuilder();
+            var mistakeName = new StringBuilder();
+            var explanation = new StringBuilder();
             var index = 1;
+            var wasSeparator = false;
             try
             {
-                while (label.Text[index] != ']')
+                while (text[index] != ']')
                 {
-                    result.Append(label.Text[index]);
+                    if (text[index] == ',' && !wasSeparator)
+                    {
+                        wasSeparator = true;
+                        index += 2;
+                        continue;
+                    }
+                    if (wasSeparator) explanation.Append(text[index]);
+                    else mistakeName.Append(text[index]);
                     index++;
                 }
             }
@@ -391,15 +383,11 @@ namespace Rewrite_It
             }
             index += 2;
 
-            switch (result.ToString())
-            {
-                case "NoNumbers":
-                    ExpectedMistakeAreas.Add(label.GetHashCode(), Mistakes.NoNumbers);
-                    break;
-                default: throw new ArgumentException("Такого типа ошибки не существует");
-            }
-            label.Text = label.Text.Substring(index);
-            return label;
+            var mistake = new Mistake();
+            mistake.SetType(mistakeName.ToString());
+            mistake.Explanation = explanation.ToString();
+            text = text.Substring(index);
+            return (text, mistake);
         }
 
         /// <summary>
@@ -435,10 +423,10 @@ namespace Rewrite_It
                 {
                     var label = sender as Label;
                     descriptionMistake.Text = MistakesList[label.GetHashCode()].Item3;
-                    controls.Add(descriptionMistake);
+                    form.Controls.Add(descriptionMistake);
                     descriptionMistake.BringToFront();
                 };
-                labels[i].MouseLeave += (sender, e) => controls.Remove(descriptionMistake);
+                labels[i].MouseLeave += (sender, e) => form.Controls.Remove(descriptionMistake);
             }
         }
 
@@ -454,14 +442,14 @@ namespace Rewrite_It
                 {
                     var label = sender as Label;
                     if (!SelectedMistakeAreas.ContainsKey(label.GetHashCode())) return;
-                    descriptionTextArea.Text = $"Помечено как:\n{GetMistakeText(SelectedMistakeAreas[label.GetHashCode()]).name}" +
+                    descriptionTextArea.Text = $"Помечено как:\n{GetMistakeText(SelectedMistakeAreas[label.GetHashCode()].Type).name}" +
                     "\n\nКликните ЛКМ, чтобы изменить" +
                     "\nКликните ПКМ для отмены";
                     descriptionTextArea.Width = descriptionTextArea.PreferredWidth;
                     var x = label.Location.X;
                     if (x > 700) x = label.Location.X + label.Width - descriptionTextArea.Width;
                     descriptionTextArea.Location = new Point(x, label.Location.Y + label.Height);
-                    controls.Add(descriptionTextArea);
+                    form.Controls.Add(descriptionTextArea);
                     descriptionTextArea.BringToFront();
                 };
                 labels[i].MouseLeave += (sender, e) => RemoveTextDescription(descriptionTextArea);

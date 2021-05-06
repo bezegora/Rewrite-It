@@ -1,24 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
 
 namespace Rewrite_It
 {
     public class GameEvents
     {
-        private static LevelParameters level;
-        private static MainOffice office;
-        private static CheckMode checkMode;
+        public static Queue<Phrase> PhrasesQueue { get; set; } = new Queue<Phrase>();
+        public static bool EventIsProgress { get; private set; } = false;
+        private static Form1 form;
 
-        public static void InitializeComponents(LevelParameters iLevel, MainOffice iOffice, CheckMode iCheckMode)
+        public static void InitializeComponents(Form1 _form)
         {
-            if (iLevel == null || iOffice == null || iCheckMode == null)
-                throw new ArgumentException("Один из компонентов имел значение null");
-            level = iLevel;
-            office = iOffice;
-            checkMode = iCheckMode;
+            form = _form;
         }
 
         /// <summary>
@@ -27,56 +22,139 @@ namespace Rewrite_It
         /// <param name="textFile"></param>
         public static void Article()
         {
-            var index = new Random().Next(level.Articles.Count - 1);
-            checkMode.CreateArticleText(level.Articles[index]);
-            level.Articles.RemoveAt(index);
+            var random = new Random();
+            var index = random.Next(form.Level.Articles.Count - 1);
+            form.CheckMode.CreateArticleText(form.Level.Articles[index]);
+            form.Level.Articles.RemoveAt(index);
 
-            var phrasesQueue = new Queue<(string, int, Action)>();
-            phrasesQueue.Enqueue(("Добрый день!", 3000, null));
-
-            Action createArticleImage = new Action(() =>
+            var possiblePhrases = new[]
             {
-                office.DocumentLocation = new Point(650, 650);
-                office.Option1.Location = new Point(150, 520);
-                office.Option2.Location = new Point(317, 520);
-                office.updateGraphics();
+                "Добрый день!",
+                "Здравствуйте!",
+                "Доброго дня!"
+            };
+            PhrasesQueue.Enqueue(new Phrase(possiblePhrases[random.Next(possiblePhrases.Length)], 2000));
+
+            Action createDocument = new Action(() =>
+            {
+                form.Office.DocumentLocation = new Point(650, 650);
+                //office.AddLabelsToControls(office.Option1, office.Option2);
+                form.Office.Option1.Location = new Point(150, 520);
+                form.Office.Option2.Location = new Point(317, 520);
             });
-
-            phrasesQueue.Enqueue(("Вот, пожалуйста.", 2000, createArticleImage));
-            phrasesQueue.Enqueue(("Сегодня хорошая погода, не правда ли?", 1, null));
-
-            StartEvent(phrasesQueue);
+            possiblePhrases = new[]
+            {
+                "Вот, пожалуйста.",
+                "Пожалуйста, скажите, что со статьёй всё в порядке.",
+                "Может, безо всяких сложностей сразу одобрите?",
+                "Мною было потрачено много времени на статью, она обязана пройти!",
+                "Не терпится узнать вердикт.",
+                "Давайте только побыстрее."
+            };
+            PhrasesQueue.Enqueue(new Phrase(possiblePhrases[random.Next(possiblePhrases.Length)], 2000, createDocument));
         }
 
         public static void Begin()
         {
-            var phrasesQueue = new Queue<(string, int, Action)>();
-            phrasesQueue.Enqueue(("Добрый день!", 3000, null));
-            phrasesQueue.Enqueue(("Значит, Вы наш новый главный редактор?", 3000, null));
-            phrasesQueue.Enqueue(("Похвально. Вам безумно повезло.", 5000, null));
-            phrasesQueue.Enqueue(("Зовут меня MisTakeman. Я работаю там, прямо за стенкой.", 3500, null));
-            phrasesQueue.Enqueue(("Если что, заходите. Буду рада Вас видеть!", 4000, null));
-            phrasesQueue.Enqueue(("Читатели высказали недовольство, что в наших последних выпусках слишком много научных статей.", 6000, null));
-            phrasesQueue.Enqueue(("Отложите их сегодня на потом.", 5000, null));
-            phrasesQueue.Enqueue(("А ещё мой коллега попросил передать свою статью на проверку.", 6000, null));
-            phrasesQueue.Enqueue(("Удостоверьтесь, что она не имеет прямого отношения к науке.", 7000, null));
-            phrasesQueue.Enqueue(("Похоже, на подходе другие авторы со своими статьями. Мне пора.", 5000, null));
-            phrasesQueue.Enqueue(("Хочу предупредить: любое решение имеет последствия, причём не всегда положительные.", 8000, null));
-            phrasesQueue.Enqueue(("Будьте осторожны, редактор.", 3000, null));
-
-            StartEvent(phrasesQueue);
+            PhrasesQueue.Enqueue(new Phrase("Добрый день!", 3000));
+            PhrasesQueue.Enqueue(new Phrase("Значит, Вы наш новый главный редактор?", 3000));
+            PhrasesQueue.Enqueue(new Phrase("Похвально. Вам безумно повезло.", 5000));
+            PhrasesQueue.Enqueue(new Phrase("Зовут меня MisTakeman. Я работаю там, прямо за стенкой.", 3500));
+            PhrasesQueue.Enqueue(new Phrase("Если что, заходите. Буду рада Вас видеть!", 4000));
+            PhrasesQueue.Enqueue(new Phrase("Похоже, на подходе другие авторы со своими статьями. Мне пора.", 5000));
+            PhrasesQueue.Enqueue(new Phrase("Хочу предупредить: любое решение имеет последствия, причём не всегда положительные.", 8000));
+            PhrasesQueue.Enqueue(new Phrase("Будьте осторожны, редактор.", 3000, () => CharacterDeparture(2000)));
         }
 
-        private static void StartEvent(Queue<(string Text, int WaitingInMilliseconds, Action ExtraEvent)> phrasesQueue)
+        public static void RejectionArticle()
         {
+            var random = new Random();
+            var possiblePhrases = new[]
+            {
+                "К сожалению, мы не можем принять Вашу статью.",
+                "Вынужден сообщить, что статья не прошла проверку.",
+                "Сегодня Вам не повезло."
+            };
+            PhrasesQueue.Enqueue(new Phrase(possiblePhrases[random.Next(possiblePhrases.Length)], 2500, false));
+            possiblePhrases = new[]
+            {
+                "Что? Почему?",
+                "О чём Вы говорите?",
+                "Не может быть! В чём причина?"
+            };
+            PhrasesQueue.Enqueue(new Phrase(possiblePhrases[random.Next(possiblePhrases.Length)], 1500));
+            possiblePhrases = new[]
+            {
+                "В статье достаточно ошибок, чтобы не допустить её к публикации.",
+                "В статье помечены все недочёты.",
+                "Посмотрите сами."
+            };
+            PhrasesQueue.Enqueue(new Phrase(possiblePhrases[random.Next(possiblePhrases.Length)], 2500, false));
+            possiblePhrases = new[]
+            {
+                "Хм. До свидания.",
+                "Эх.",
+                "До свидания.",
+                "Неважно.",
+                "Вы меня неправильно поняли."
+            };
+            PhrasesQueue.Enqueue(new Phrase(possiblePhrases[random.Next(possiblePhrases.Length)], 5000, () => CharacterDeparture(2000)));
+        }
+
+        public static void ApprovingArticle()
+        {
+            var random = new Random();
+            var possiblePhrases = new[]
+{
+                "Статья принята. Её опубликуют в ближайшее время.",
+                "Статья допущена к публикации.",
+                "Хорошая новость. Статья успешно прошла проверку."
+            };
+            PhrasesQueue.Enqueue(new Phrase(possiblePhrases[random.Next(possiblePhrases.Length)], 2500, false));
+            possiblePhrases = new[]
+            {
+                "Замечательно!",
+                "Вам удалось меня осчастливить.",
+                "Разве может быть иначе?"
+            };
+            PhrasesQueue.Enqueue(new Phrase(possiblePhrases[random.Next(possiblePhrases.Length)], 5000, () => CharacterDeparture(2000)));
+        }
+
+        private static void CharacterDeparture(int waitingInMilliseconds)
+        {
+            var wait = new Timer { Interval = waitingInMilliseconds };
+            wait.Tick += (sender, e) =>
+            {
+                form.Office.Person.Direction = MovingDirections.Left;
+                form.Office.Person.StartMoving();
+                wait.Stop();
+            };
+            wait.Start();
+        }
+
+        public static void StartEvent()
+        {
+            if (PhrasesQueue.Count == 0 || EventIsProgress) return;
+            EventIsProgress = true;
             var wait = new Timer { Interval = 1 };
             wait.Tick += ((sender, e) =>
             {
-                var (Text, WaitingInMilliseconds, ExtraEvent) = phrasesQueue.Dequeue();
-                office.AddNewDialogPhrase(Text);
-                ExtraEvent?.Invoke();
-                wait.Interval = WaitingInMilliseconds;
-                if (phrasesQueue.Count == 0) wait.Stop();
+                var phrase = PhrasesQueue.Dequeue();
+                var align = ContentAlignment.MiddleRight;
+                var color = Color.Black;
+                if (!phrase.TalkingVisitor)
+                {
+                    align = ContentAlignment.MiddleLeft;
+                    color = Color.DarkBlue;
+                }
+                form.Office.AddNewDialogPhrase(phrase.Text, color, align);
+                phrase.ExtraEvent?.Invoke();
+                wait.Interval = phrase.WaitingInMilliseconds;
+                if (PhrasesQueue.Count == 0)
+                {
+                    wait.Stop();
+                    EventIsProgress = false;
+                }
             });
             wait.Start();
         }
