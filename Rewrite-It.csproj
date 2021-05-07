@@ -33,6 +33,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -145,6 +146,42 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Woman3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CheckMode.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ChosenOption.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Click.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DoorClose.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DoorEnter.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NewMessage.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NextPhrase.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\OfficeBackground.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Paper.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Promotion.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Stamp.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Стрелка %28исходное%29.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Media;
 using System.Text;
 using System.Windows.Forms;
 
@@ -31,6 +32,8 @@ namespace Rewrite_It
         public Point NotebookLocation { get; set; } = new Point(100, 50);
 
         public string LetterText { get; private set; }
+
+        public SoundPlayer PlayerBackground { get; } = new SoundPlayer(Properties.Resources.Background);
 
         public MainOffice(Label option1, Label option2, Character person, Form1 form)
         {
@@ -72,6 +75,7 @@ namespace Rewrite_It
             Person.Direction = MovingDirections.Right;
             Person.CurrentImage = form.Level.Events.Peek().character;
             Person.StartMoving();
+            form.PlaySound(Properties.Resources.DoorEnter);
 
             if (LetterText != null)
             {
@@ -138,15 +142,22 @@ namespace Rewrite_It
 
         private void OnClickOnOption(object sender, MouseEventArgs e)
         {
+            form.PlaySound(Properties.Resources.ChosenOption);
             RemoveOptions();
             var label = (Label)sender;
-            if (label.Text == "Одобрить" || label.Text == "Отклонить")
+            var wait = new Timer { Interval = 700 };
+            DocumentLocation = new Point(-500, 0);
+            wait.Tick += (s, arg) =>
             {
-                DocumentLocation = new Point(-500, 0);
-                CheckForMistakes();
-                if (label.Text == "Одобрить") GameEvents.ApprovingArticle();
-                else GameEvents.RejectionArticle();
-            }
+                if (label.Text == "Одобрить" || label.Text == "Отклонить")
+                {
+                    CheckForMistakes();
+                    if (label.Text == "Одобрить") GameEvents.ApprovingArticle();
+                    else GameEvents.RejectionArticle();
+                }
+                wait.Stop();
+            };
+            wait.Start();
         }
 
         private void RemoveOptions()

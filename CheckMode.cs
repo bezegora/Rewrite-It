@@ -64,6 +64,9 @@ namespace Rewrite_It
         /// </summary>
         public Label SelectedTextArea { get; private set; } = null;
 
+        private readonly List<string> guidePage = new List<string>()
+        { "Здравствуйте, редактор!" };
+
         /// <summary>
         /// Кортеж областей, которые сопоставляются прямо сейчас.
         /// Если оба элемента != null, любые клики мышью по объектам игнорируются.
@@ -202,7 +205,11 @@ namespace Rewrite_It
                     return;
                 }
                 SelectedTextArea = nextArea;
-                if (nextArea != null) nextArea.BackColor = colorSelectedTextArea;
+                if (nextArea != null)
+                {
+                    nextArea.BackColor = colorSelectedTextArea;
+                    form.PlaySound(Properties.Resources.ChosenOption);
+                }
             }
         }
 
@@ -234,6 +241,7 @@ namespace Rewrite_It
                 if (SelectedMistakeAreas[textHash].Type == MistakesList[mistakeHash].Item1) return;
                 SelectedMistakeAreas.Remove(textHash);
             }
+            form.PlaySound(Properties.Resources.Click);
             textArea.BackColor = colorSelectedTextArea;
             mistakeArea.BackColor = colorSelectedTextArea;
             RemoveTextDescription(descriptionMistake);
@@ -262,6 +270,7 @@ namespace Rewrite_It
             textArea.ForeColor = StringStyle.Brush.Color;
             SetSelectedTextArea(null);
             RemoveTextDescription(descriptionTextArea);
+            form.PlaySound(Properties.Resources.Promotion);
         }
 
         /// <summary>

@@ -150,6 +150,7 @@ namespace Rewrite_It
                 form.Office.AddNewDialogPhrase(phrase.Text, color, align);
                 phrase.ExtraEvent?.Invoke();
                 wait.Interval = phrase.WaitingInMilliseconds;
+                form.PlaySound(Properties.Resources.NextPhrase);
                 if (PhrasesQueue.Count == 0)
                 {
                     wait.Stop();

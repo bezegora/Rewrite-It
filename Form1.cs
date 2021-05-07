@@ -5,6 +5,7 @@ using System.Drawing.Text;
 using System.Windows.Forms;
 using System.Linq;
 using System.IO;
+using System.Media;
 
 namespace Rewrite_It
 {
@@ -82,7 +83,7 @@ namespace Rewrite_It
                  {
                      [NamesImages.Woman1] = Properties.Resources.Woman1,
                      [NamesImages.Woman2] = Properties.Resources.Woman2,
-                     [NamesImages.MisTakeman] = Properties.Resources.Woman3,
+                     [NamesImages.MisTakeman] = Properties.Resources.MisTakeman,
                      [NamesImages.Man1] = Properties.Resources.Man1,
                      [NamesImages.Man2] = Properties.Resources.Man2
                  },
@@ -159,14 +160,26 @@ namespace Rewrite_It
         private void OnMouseClick(object sender, MouseEventArgs e)
         {
             if (IsClickedArea(e, Office.DocumentLocation, new Point(Properties.Resources.Document.Size)))
+            {
+                PlaySound(Properties.Resources.CheckMode);
                 ChangeInterface(Properties.Resources.CheckModeBackground, Interface.CheckMode);
+            }
             if (CheckMode.CheckHasMatching()) return;
             if (IsClickedArea(e, CheckMode.ExitButtonLocation, new Point(Properties.Resources.ExitFromCheckMode.Size)))
+            {
+                PlaySound(Properties.Resources.CheckMode);
                 ChangeInterface(Properties.Resources.OfficeBackground, Interface.MainOffice);
+            }
             if (IsClickedArea(e, new Point(CheckMode.BookLocation.X + 143, CheckMode.BookLocation.Y + 6), new Point(112, 56)))
+            {
+                PlaySound(Properties.Resources.Paper);
                 CheckMode.UpdateStatus(CheckMode.Tabs.MistakesList);
+            }
             if (IsClickedArea(e, new Point(CheckMode.BookLocation.X + 28, CheckMode.BookLocation.Y + 6), new Point(112, 56)))
+            {
+                PlaySound(Properties.Resources.Paper);
                 CheckMode.UpdateStatus(CheckMode.Tabs.Guide);
+            }
 
             Invalidate();
         }
@@ -187,8 +200,17 @@ namespace Rewrite_It
             this.BackgroundImage = backgroundImage;
             CheckMode.SetSelectedTextArea(null);
             Controls.Clear();
-            if (CurrentInterface is Interface.MainOffice) Office.UpdateStatus();
-            if (CurrentInterface is Interface.CheckMode) CheckMode.UpdateStatus(CheckMode.CurrentBookMode);
+            if (CurrentInterface is Interface.MainOffice)
+                Office.UpdateStatus();
+            if (CurrentInterface is Interface.CheckMode)
+                CheckMode.UpdateStatus(CheckMode.CurrentBookMode);
+        }
+
+        public void PlaySound(UnmanagedMemoryStream sound, bool loop = false)
+        {
+            var soundPlayer = new SoundPlayer(sound);
+            if (!loop) soundPlayer.Play();
+            else soundPlayer.PlayLooping();
         }
 
         public void AddLabelsToControls(params Label[] labels)

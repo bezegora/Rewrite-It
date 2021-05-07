@@ -56,18 +56,15 @@ namespace Rewrite_It
         /// </summary>
         public MovingDirections Direction { get; set; }
 
-        public Timer TimerUpdate { get; } = new Timer { Interval = 40 };
-
         public Character(Dictionary<NamesImages, Image> images, Form1 form)
         {
             Images = images;
             IsMoving = false;
             Direction = MovingDirections.Right;
             this.form = form;
-            //TimerUpdate.Tick += (sender, e) => Move();
-            //TimerUpdate.Start();
         }
 
+        private bool wasPlayedDoorCloseSound = false;
         public void Move()
         {
             if (!IsMoving) return;
@@ -84,9 +81,15 @@ namespace Rewrite_It
             if (Direction is MovingDirections.Left)
             {
                 Location = new Point(Location.X - 30, Location.Y);
+                if (Location.X < -300 && !wasPlayedDoorCloseSound)
+                {
+                    wasPlayedDoorCloseSound = true;
+                    form.PlaySound(Properties.Resources.DoorClose);
+                }
                 if (Location.X < -500)
                 {
-                    Location = new Point(-500, Location.Y);
+                    wasPlayedDoorCloseSound = false;
+                    Location = new Point(-500, Location.Y); 
                     form.Office.EnterCharacter();
                 }
             }

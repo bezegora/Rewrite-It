@@ -41,6 +41,11 @@ namespace Rewrite_It
         /// </summary>
         public int FinesSum { get; private set; } = 0;
 
+        /// <summary>
+        /// Доход за уровень.
+        /// </summary>
+        public int Income { get; private set; } = 0;
+
         public LevelParameters(Queue<(Action, NamesImages)> events, List<StreamReader> articles)
         {
             var articleEventsCount = 0;
