@@ -54,7 +54,7 @@ namespace Rewrite_It
             graphics.DrawImage(Properties.Resources.OfficeTable, -70, 600);
             graphics.DrawImage(Properties.Resources.Notebook, NotebookLocation.X, NotebookLocation.Y);
             graphics.DrawImage(Properties.Resources.HeadEditorBook, 150, 625);
-            graphics.DrawImage(Properties.Resources.OfficeComputer, 1020, 230);
+            graphics.DrawImage(Properties.Resources.OfficeComputer, 900, 300);
             graphics.DrawImage(Properties.Resources.Document, DocumentLocation.X, DocumentLocation.Y);
         }
 
