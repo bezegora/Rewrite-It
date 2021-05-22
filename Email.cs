@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace Rewrite_It
 {
-    class Email
+    public class Email
     {
         // controls - коллекция интерактивных элементов. В нашем проекте там лежат только Label-ы.
         // Чтобы Label-ы отображались на форме, нужно обязательно добавить их в controls.
@@ -14,12 +14,15 @@ namespace Rewrite_It
         // Эти методы будут вызываться при смене игрового интерфейса в классе Form1.
         // Вход и выход из эл. почты здесь писать не нужно!
         private readonly Control.ControlCollection controls;
+        private readonly GameStats stats;
 
         private readonly List<Label> letters = new List<Label>();
-        private readonly Dictionary<int, (string Content, bool Unread)> lettersInformation = new Dictionary<int, (string, bool)>();
+        private readonly Dictionary<int, (string Date, string Content, bool Unread)> lettersInformation 
+            = new Dictionary<int, (string, string, bool)>();
 
-        public Email(Control.ControlCollection controls)
+        public Email(GameStats stats, Control.ControlCollection controls)
         {
+            this.stats = stats;
             this.controls = controls;
         }
 
@@ -27,7 +30,7 @@ namespace Rewrite_It
         {
             // Здесь обработка ситуации, когда количество писем сейчас превысит максимум.
             // Нужно убрать первое письмо из letters, а у остальных сдвинуть вверх координату Y на фиксированное значение
-            // Причём нужно также убрать из lettersContents содержание удалённого письма.
+            // Причём нужно также убрать из lettersInformation содержание удалённого письма.
             // Лучше это всё вынести в отдельный метод.
             var label = new Label()
             {
@@ -38,7 +41,7 @@ namespace Rewrite_It
                 //Location = new Point(...)       Позиция пришедшего в конец очереди письма. Можно задать не сейчас, а потом вот так: label.Location = new Point(...)
             };
             letters.Add(label);
-            lettersInformation.Add(label.GetHashCode(), (content, true));
+            lettersInformation.Add(label.GetHashCode(), (stats.GetDate(), content, true));
         }
 
         // Далее обработка события клика мышью по Label-письму, приводящее к отображению его содержания.

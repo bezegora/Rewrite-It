@@ -5,6 +5,7 @@ using System.Drawing.Text;
 using System.Windows.Forms;
 using System.Linq;
 using System.IO;
+using System.Media;
 
 namespace Rewrite_It
 {
@@ -25,17 +26,19 @@ namespace Rewrite_It
         /// <summary>
         /// Таймер, определяющий частоту перерисовки кадра
         /// </summary>
-        public static Timer TimerGraphicsUpdate { get; } = new Timer { Interval = 10 };
+        public Timer TimerGraphicsUpdate { get; } = new Timer { Interval = 40 };
 
         /// <summary>
         /// Определяет текущий нарисованный в форме игровой интерфейс
         /// </summary>
         public static Interface CurrentInterface { get; private set; }
 
-        private readonly MainOffice office;
-        private readonly CheckMode checkMode;
-        private readonly DayEnd dayEnd;
-        private LevelParameters level;
+        public MainOffice Office { get; }
+        public CheckMode CheckMode { get; }
+        public DayEnd DayEnd { get; }
+        public Email Email { get; }
+        public GameStats Stats { get; }
+        public LevelParameters Level { get; }
 
         public Form1()
         {
@@ -43,19 +46,21 @@ namespace Rewrite_It
             DoubleBuffered = true;
             SetStyleFont("PixelGeorgia.ttf", Color.Black, 16);
 
-            void updateGraphics() => Invalidate();
-            checkMode = new CheckMode(new Dictionary<CheckMode.Tabs, Bitmap>
+            Stats = new GameStats();
+
+            CheckMode = new CheckMode(new Dictionary<CheckMode.Tabs, Bitmap>
             {
                 [CheckMode.Tabs.Guide] = new Bitmap(Properties.Resources.HeadBookTab1),
                 [CheckMode.Tabs.MistakesList] = new Bitmap(Properties.Resources.HeadBookTab2),
                 [CheckMode.Tabs.CensoredList] = new Bitmap(Properties.Resources.HeadBookTab3)
             },
-            updateGraphics,
             Color.CornflowerBlue,
             Color.DarkSlateGray,
-            Controls);
+            this);
 
-            office = new MainOffice(
+            Email = new Email(Stats, Controls);
+
+            Office = new MainOffice(
                  new Label
                  {
                      Text = "Одобрить",
@@ -74,30 +79,43 @@ namespace Rewrite_It
                      BorderStyle = BorderStyle.FixedSingle,
                      Location = new Point(-500, 0)
                  },
-                 new Character(new Dictionary<Character.NamesImages, Image>()
+                 new Character(new Dictionary<NamesImages, Image>()
                  {
-                     [Character.NamesImages.Women1] = Properties.Resources.Women1
+                     [NamesImages.Woman1] = Properties.Resources.Woman1,
+                     [NamesImages.Woman2] = Properties.Resources.Woman2,
+                     [NamesImages.MisTakeman] = Properties.Resources.MisTakeman,
+                     [NamesImages.Man1] = Properties.Resources.Man1,
+                     [NamesImages.Man2] = Properties.Resources.Man2
                  },
-                 Character.NamesImages.Women1),
-                 updateGraphics,
-                 //checkMode,
-                 Controls);
+                 this), this);
             ChangeInterface(Properties.Resources.OfficeBackground, Interface.MainOffice);
 
-            var events = new Queue<Action>();
-            // Меняйте местами следующие 2 строки, чтобы запускать соответствующие тесты.
-            events.Enqueue(GameEvents.Begin); // Тест прокрутки диалога
-            events.Enqueue(GameEvents.Article); // Тест проверки статьи
+            var events = new Queue<(Action, NamesImages)>();
+
+            // В следующих строках мы складываем в очередь события, которые поочерёдно произойдут за уровень,
+            // а также наименования персонажей, привязанных к соответствующему событию.
+            events.Enqueue((GameEvents.Article, NamesImages.Woman1));
+            events.Enqueue((GameEvents.Begin, NamesImages.MisTakeman));
+            events.Enqueue((GameEvents.Article, NamesImages.Man1));
+            events.Enqueue((GameEvents.Article, NamesImages.Woman2));
+            events.Enqueue((GameEvents.Article, NamesImages.Man2));
+
+            // В следующий список мы складываем все статьи, которые рандомно будут попадаться на уровне
+            // при воспроизведении события Article.
             var articles = new List<StreamReader>()
             {
-                new StreamReader(@"Articles\Marketing1.txt")
+                new StreamReader(@"Articles\Marketing2.txt"),
+                new StreamReader(@"Articles\Marketing2.txt"),
+                new StreamReader(@"Articles\Marketing2.txt"),
+                new StreamReader(@"Articles\Marketing2.txt")
             };
-            level = new LevelParameters(events, articles);
-            GameEvents.InitializeComponents(level, office, checkMode);
+            Level = new LevelParameters(events, articles);
+            GameEvents.InitializeComponents(this);
 
             TimerGraphicsUpdate.Tick += new EventHandler(Update);
+            TimerGraphicsUpdate.Start();
 
-            office.EnterCharacter(office.Person, TimerGraphicsUpdate, new Point(150, 150));
+            Office.EnterCharacter();
         }
 
         private void SetStyleFont(string fileFont, Color color, int size)
@@ -112,22 +130,9 @@ namespace Rewrite_It
         private void Update(object sender, EventArgs e)
         {
             Invalidate();
-            var person = office.Person;
-            if (person.IsMoving)
-                if (person.Direction is Character.MovingDirections.Left)
-                {
-                    person.Location = new Point(person.Location.X + 15, person.Location.Y);
-                    if (person.Location.X > 530)
-                    {
-                        office.StopCharacter(person, TimerGraphicsUpdate);
-                        level.Events.Dequeue()();
-                    }
-                }
-                else if (person.Direction is Character.MovingDirections.Right)
-                {
-                    person.Location = new Point(person.Location.X - 15, person.Location.Y);
-                    if (person.Location.X < -100) office.StopCharacter(person, TimerGraphicsUpdate);
-                }
+            var person = Office.Person;
+            person.Move();
+            GameEvents.StartEvent();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -146,29 +151,35 @@ namespace Rewrite_It
         {
             switch (CurrentInterface)
             {
-                case Interface.MainOffice:
-                    office.Paint(e);
-                    break;
-                case Interface.CheckMode:
-                    checkMode.Paint(e);
-                    break;
-                case Interface.DayEnd:
-                    dayEnd.Paint(e);
-                    break;
+                case Interface.MainOffice: Office.Paint(e); break;
+                case Interface.CheckMode: CheckMode.Paint(e); break;
+                case Interface.DayEnd: DayEnd.Paint(e); break;
             }
         }
 
         private void OnMouseClick(object sender, MouseEventArgs e)
         {
-            if (IsClickedArea(e, office.DocumentLocation, new Point(Properties.Resources.Document.Size)))
+            if (IsClickedArea(e, Office.DocumentLocation, new Point(Properties.Resources.Document.Size)))
+            {
+                PlaySound(Properties.Resources.CheckMode);
                 ChangeInterface(Properties.Resources.CheckModeBackground, Interface.CheckMode);
-            if (checkMode.CheckHasMatching()) return;
-            if (IsClickedArea(e, checkMode.ExitButtonLocation, new Point(Properties.Resources.ExitFromCheckMode.Size)))
+            }
+            if (CheckMode.CheckHasMatching()) return;
+            if (IsClickedArea(e, CheckMode.ExitButtonLocation, new Point(Properties.Resources.ExitFromCheckMode.Size)))
+            {
+                PlaySound(Properties.Resources.CheckMode);
                 ChangeInterface(Properties.Resources.OfficeBackground, Interface.MainOffice);
-            if (IsClickedArea(e, new Point(checkMode.BookLocation.X + 143, checkMode.BookLocation.Y + 6), new Point(112, 56)))
-                checkMode.UpdateStatus(CheckMode.Tabs.MistakesList);
-            if (IsClickedArea(e, new Point(checkMode.BookLocation.X + 28, checkMode.BookLocation.Y + 6), new Point(112, 56)))
-                checkMode.UpdateStatus(CheckMode.Tabs.Guide);
+            }
+            if (IsClickedArea(e, new Point(CheckMode.BookLocation.X + 143, CheckMode.BookLocation.Y + 6), new Point(112, 56)))
+            {
+                PlaySound(Properties.Resources.Paper);
+                CheckMode.UpdateStatus(CheckMode.Tabs.MistakesList);
+            }
+            if (IsClickedArea(e, new Point(CheckMode.BookLocation.X + 28, CheckMode.BookLocation.Y + 6), new Point(112, 56)))
+            {
+                PlaySound(Properties.Resources.Paper);
+                CheckMode.UpdateStatus(CheckMode.Tabs.Guide);
+            }
 
             Invalidate();
         }
@@ -187,10 +198,19 @@ namespace Rewrite_It
         {
             CurrentInterface = _interface;
             this.BackgroundImage = backgroundImage;
-            checkMode.SetSelectedTextArea(null);
+            CheckMode.SetSelectedTextArea(null);
             Controls.Clear();
-            if (CurrentInterface is Interface.MainOffice) office.UpdateStatus();
-            if (CurrentInterface is Interface.CheckMode) checkMode.UpdateStatus(checkMode.CurrentBookMode);
+            if (CurrentInterface is Interface.MainOffice)
+                Office.UpdateStatus();
+            if (CurrentInterface is Interface.CheckMode)
+                CheckMode.UpdateStatus(CheckMode.CurrentBookMode);
+        }
+
+        public void PlaySound(UnmanagedMemoryStream sound, bool loop = false)
+        {
+            var soundPlayer = new SoundPlayer(sound);
+            if (!loop) soundPlayer.Play();
+            else soundPlayer.PlayLooping();
         }
 
         public void AddLabelsToControls(params Label[] labels)

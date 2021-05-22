@@ -11,19 +11,30 @@ namespace Rewrite_It
 {
     public class DayEnd
     {
-        private readonly ControlCollection controls;
+        //Вместо controls создал form. Здесь Controls не понадобится.
+        private readonly Form1 form;
 
         private readonly double earnedMoney;
         private readonly double fines;
 
         private readonly string[] text = { "Заработано: ", "Штраф: ", "Итого: " };
 
-        private readonly Action updateGraphics;
+        //Теперь не нужно обновлять графику вручную, она обновляется автоматически.
+        //private readonly Action updateGraphics;
 
-        public DayEnd(Action update, ControlCollection controls, double earned, double minusMoney)
+        //В классе form можно обращаться к 2-м классам: Stats и Level.
+        //Level содержит показатели, характерные только для данного уровня. 
+        //Stats содержит общие показатели, которые изменяются на протяжении всей игры.
+        //Напиши form.Level. или form.Stats. и увидишь нужные тебе свойства во всплывающем списке.
+        //Все свойства задокументированы (к ним есть пояснения).
+        //С текущим статусом популярности и с прибавкой к популярности сложнее.
+        //Мы не показываем популярность в числовом виде, а руководствуемся таблицами, которую я скинул в ЛС.
+        //Текущую дату можно получить так: form.Stats.GetDate()
+
+        public DayEnd(Form1 form, double earned, double minusMoney)
         {
-            this.controls = controls;
-            updateGraphics = update;
+            this.form = form;
+            //updateGraphics = update;
             earnedMoney = earned;
             fines = minusMoney;
         }
@@ -31,7 +42,6 @@ namespace Rewrite_It
         public void Paint(PaintEventArgs e)
         {
             var graphics = e.Graphics;
-            updateGraphics();
             graphics.Clear(Color.Black);
             var x = 512;
             var y = 512;
