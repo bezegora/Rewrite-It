@@ -104,10 +104,10 @@ namespace Rewrite_It
             // при воспроизведении события Article.
             var articles = new List<StreamReader>()
             {
-                new StreamReader(@"Articles\Marketing1.txt"),
-                new StreamReader(@"Articles\Marketing1.txt"),
-                new StreamReader(@"Articles\Marketing1.txt"),
-                new StreamReader(@"Articles\Marketing1.txt")
+                new StreamReader(@"Articles\Marketing2.txt"),
+                new StreamReader(@"Articles\Marketing2.txt"),
+                new StreamReader(@"Articles\Marketing2.txt"),
+                new StreamReader(@"Articles\Marketing2.txt")
             };
             Level = new LevelParameters(events, articles);
             GameEvents.InitializeComponents(this);

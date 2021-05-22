@@ -100,6 +100,7 @@ namespace Rewrite_It
             BookModes = bookFrames;
             AddNewMistake(MistakeType.NoNumbers);
             AddNewMistake(MistakeType.IncorrectDefinitionTargetAudience);
+            AddNewMistake(MistakeType.TooMuchDetails);
             this.colorSelectedTextArea = colorSelectedTextArea;
             descriptionTextArea = new Label()
             {
