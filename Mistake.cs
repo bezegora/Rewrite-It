@@ -9,7 +9,8 @@ namespace Rewrite_It
     {
         None,
         NoNumbers,
-        IncorrectDefinitionTargetAudience
+        IncorrectDefinitionTargetAudience,
+        TooMuchDetails,
     }
 
     public class Mistake
@@ -27,6 +28,7 @@ namespace Rewrite_It
             {
                 case "NoNumbers": Type = MistakeType.NoNumbers; break;
                 case "IncorrectDefinitionTargetAudience": Type = MistakeType.IncorrectDefinitionTargetAudience; break;
+                case "TooMuchDetails": Type = MistakeType.TooMuchDetails; break;
                 default: throw new ArgumentException("Такого типа ошибки пока не существует");
             }
         }
