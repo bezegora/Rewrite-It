@@ -83,7 +83,7 @@ namespace Rewrite_It
                  {
                      [NamesImages.Woman1] = Properties.Resources.Woman1,
                      [NamesImages.Woman2] = Properties.Resources.Woman2,
-                     [NamesImages.MisTakeman] = Properties.Resources.MisTakeman,
+                     [NamesImages.MissTakeman] = Properties.Resources.MissTakeman,
                      [NamesImages.Man1] = Properties.Resources.Man1,
                      [NamesImages.Man2] = Properties.Resources.Man2
                  },
@@ -95,7 +95,7 @@ namespace Rewrite_It
             // В следующих строках мы складываем в очередь события, которые поочерёдно произойдут за уровень,
             // а также наименования персонажей, привязанных к соответствующему событию.
             events.Enqueue((GameEvents.Article, NamesImages.Woman1));
-            events.Enqueue((GameEvents.Begin, NamesImages.MisTakeman));
+            events.Enqueue((GameEvents.Begin, NamesImages.MissTakeman));
             events.Enqueue((GameEvents.Article, NamesImages.Man1));
             events.Enqueue((GameEvents.Article, NamesImages.Woman2));
             events.Enqueue((GameEvents.Article, NamesImages.Man2));
@@ -104,10 +104,10 @@ namespace Rewrite_It
             // при воспроизведении события Article.
             var articles = new List<StreamReader>()
             {
+                new StreamReader(@"Articles\Marketing1.txt"),
                 new StreamReader(@"Articles\Marketing2.txt"),
-                new StreamReader(@"Articles\Marketing2.txt"),
-                new StreamReader(@"Articles\Marketing2.txt"),
-                new StreamReader(@"Articles\Marketing2.txt")
+                new StreamReader(@"Articles\Marketing3.txt"),
+                new StreamReader(@"Articles\Marketing4.txt")
             };
             Level = new LevelParameters(events, articles);
             GameEvents.InitializeComponents(this);
