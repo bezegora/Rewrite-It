@@ -101,6 +101,7 @@ namespace Rewrite_It
             AddNewMistake(MistakeType.NoNumbers);
             AddNewMistake(MistakeType.IncorrectDefinitionTargetAudience);
             AddNewMistake(MistakeType.TooMuchDetails);
+            AddNewMistake(MistakeType.ConfusedParagraphs);
             this.colorSelectedTextArea = colorSelectedTextArea;
             descriptionTextArea = new Label()
             {
@@ -173,6 +174,10 @@ namespace Rewrite_It
                 case MistakeType.TooMuchDetails: return
                         ("Слишком много деталей",
                         "Переизбыток деталей мешает читателю уловить логическую нить.");
+                case MistakeType.ConfusedParagraphs: return 
+                        ("Перепутаны абзацы",
+                            "Если абзацы перепутаны местами, то нарушена логика повествования," +
+                            " что влияет на восприятие текста");
             }
             throw new ArgumentException();
         }

@@ -11,6 +11,7 @@ namespace Rewrite_It
         NoNumbers,
         IncorrectDefinitionTargetAudience,
         TooMuchDetails,
+        ConfusedParagraphs
     }
 
     public class Mistake
@@ -29,6 +30,7 @@ namespace Rewrite_It
                 case "NoNumbers": Type = MistakeType.NoNumbers; break;
                 case "IncorrectDefinitionTargetAudience": Type = MistakeType.IncorrectDefinitionTargetAudience; break;
                 case "TooMuchDetails": Type = MistakeType.TooMuchDetails; break;
+                case "ConfusedParagraphs": Type = MistakeType.ConfusedParagraphs; break;
                 default: throw new ArgumentException("Такого типа ошибки пока не существует");
             }
         }

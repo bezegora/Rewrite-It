@@ -11,7 +11,7 @@ namespace Rewrite_It
     {
         Woman1,
         Woman2,
-        MisTakeman,
+        MissTakeman,
         Man1,
         Man2
     }

@@ -37,7 +37,7 @@ namespace Rewrite_It
 
             Action createDocument = new Action(() =>
             {
-                form.Office.DocumentLocation = new Point(650, 650);
+                form.Office.DocumentLocation = new Point(650, 600);
                 //office.AddLabelsToControls(office.Option1, office.Option2);
                 form.Office.Option1.Location = new Point(150, 520);
                 form.Office.Option2.Location = new Point(317, 520);
@@ -59,7 +59,7 @@ namespace Rewrite_It
             PhrasesQueue.Enqueue(new Phrase("Добрый день!", 3000));
             PhrasesQueue.Enqueue(new Phrase("Значит, Вы наш новый главный редактор?", 3000));
             PhrasesQueue.Enqueue(new Phrase("Похвально. Вам безумно повезло.", 5000));
-            PhrasesQueue.Enqueue(new Phrase("Зовут меня MisTakeman. Я работаю там, прямо за стенкой.", 3500));
+            PhrasesQueue.Enqueue(new Phrase("Зовут меня MissTakeman. Я работаю там, прямо за стенкой.", 3500));
             PhrasesQueue.Enqueue(new Phrase("Если что, заходите. Буду рада Вас видеть!", 4000));
             PhrasesQueue.Enqueue(new Phrase("Похоже, на подходе другие авторы со своими статьями. Мне пора.", 5000));
             PhrasesQueue.Enqueue(new Phrase("Хочу предупредить: любое решение имеет последствия, причём не всегда положительные.", 8000));
