@@ -9,6 +9,7 @@
         NoNumbers,
         IncorrectDefinitionTargetAudience,
         TooMuchDetails,
-        ConfusedParagraphs
+        ConfusedParagraphs,
+        PseudoLanguage
     }
 }

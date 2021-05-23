@@ -19,6 +19,7 @@ namespace Rewrite_It
                 case "IncorrectDefinitionTargetAudience": Type = MistakeType.IncorrectDefinitionTargetAudience; break;
                 case "TooMuchDetails": Type = MistakeType.TooMuchDetails; break;
                 case "ConfusedParagraphs": Type = MistakeType.ConfusedParagraphs; break;
+                case "PseudoLanguage": Type = MistakeType.PseudoLanguage; break;
                 default: throw new ArgumentException("Такого типа ошибки пока не существует");
             }
         }
