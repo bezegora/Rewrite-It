@@ -4,98 +4,96 @@ using System.Windows.Forms;
 
 namespace Rewrite_It
 {
-    /// <summary>
-    /// Содержит все возможные названия изображений персонажа
-    /// </summary>
-    public enum NamesImages
+    public class Character : GraphicObject
     {
-        Woman1,
-        Woman2,
-        MissTakeman,
-        Man1,
-        Man2
-    }
-
-    /// <summary>
-    /// Содержит все возможные направления движения персонажа
-    /// </summary>
-    public enum MovingDirections
-    {
-        Left,
-        Right
-    }
-
-    public class Character
-    {
-        private readonly Form1 form;
+        private readonly Controller controller;
+        private int waitBeforeChangingPosition;
+        private bool isUp;
 
         /// <summary>
         /// Содержит все изображения персонажей. 
         /// Key - название изображения. 
         /// Value - само изображение
         /// </summary>
-        public Dictionary<NamesImages, Image> Images { get; }
+        private readonly Dictionary<CharacterImage, Image> images;
 
-        /// <summary>
-        /// Название текущего изображения персонажа
-        /// </summary>
-        public NamesImages CurrentImage { get; set; }
-
-        /// <summary>
-        /// Определяет, движется ли персонаж в какую-либо сторону, заданную свойством Direction
-        /// </summary>
-        public bool IsMoving { get; private set; }
-
-        /// <summary>
-        /// Координаты отрисовки персонажа на форме
-        /// </summary>
-        public Point Location { get; set; } = new Point(-500, 150);
-
-        /// <summary>
-        /// Определяет направление движения персонажа. Движение начинается, если свойство IsMoving = true
-        /// </summary>
-        public MovingDirections Direction { get; set; }
-
-        public Character(Dictionary<NamesImages, Image> images, Form1 form)
+        public Character(Controller controller) : base(new Point(-500, 170), 15)
         {
-            Images = images;
-            IsMoving = false;
-            Direction = MovingDirections.Right;
-            this.form = form;
+            images = new Dictionary<CharacterImage, Image>()
+            {
+                [CharacterImage.Woman1] = Properties.Resources.Woman1,
+                [CharacterImage.Woman2] = Properties.Resources.Woman2,
+                [CharacterImage.MissTakeman] = Properties.Resources.MissTakeman,
+                [CharacterImage.Man1] = Properties.Resources.Man1,
+                [CharacterImage.Man2] = Properties.Resources.Man2
+            };
+            this.controller = controller;
         }
 
-        private bool wasPlayedDoorCloseSound = false;
-        public void Move()
+        public void Tick()
         {
-            if (!IsMoving) return;
-            if (Direction is MovingDirections.Right)
+            Move();
+            if (Position.X > 530)
             {
-                Location = new Point(Location.X + 20, Location.Y);
-                if (Location.X > 530)
-                {
-                    Location = new Point(530, Location.Y);
-                    StopMoving();
-                    form.Level.Events.Dequeue()._event();
-                }
+                Position = new Point(530, Position.Y);
+                Stop();
+                controller.Level.Events.Dequeue()._event();
+                MovementSpeed = 1;
+                waitBeforeChangingPosition = 20;
             }
-            if (Direction is MovingDirections.Left)
+            else if (Position.X < -500)
             {
-                Location = new Point(Location.X - 30, Location.Y);
-                if (Location.X < -300 && !wasPlayedDoorCloseSound)
-                {
-                    wasPlayedDoorCloseSound = true;
-                    form.PlaySound(Properties.Resources.DoorClose);
-                }
-                if (Location.X < -500)
-                {
-                    wasPlayedDoorCloseSound = false;
-                    Location = new Point(-500, Location.Y); 
-                    form.Office.EnterCharacter();
-                }
+                Stop();
+                Position = new Point(-500, Position.Y);
+                controller.Office.EnterCharacter();
+                controller.Sounds.PlayDoorClose();
+            }
+
+            if (waitBeforeChangingPosition > 0)
+            {
+                waitBeforeChangingPosition--;
+                if (waitBeforeChangingPosition == 0)
+                    Swing();
+            }
+
+            if (Position.Y < 165)
+            {
+                Position = new Point(Position.X, 165);
+                Stop();
+                waitBeforeChangingPosition = 30;
+            }
+            else if (Position.Y > 175)
+            {
+                Position = new Point(Position.X, 175);
+                Stop();
+                waitBeforeChangingPosition = 30;
             }
         }
 
-        public void StartMoving() => IsMoving = true;
-        public void StopMoving() => IsMoving = false;
+        public void LetIn() => GoRight();
+
+        public void Leave()
+        {
+            MovementSpeed = 20;
+            waitBeforeChangingPosition = 0;
+            Position = new Point(Position.X, 170);
+            GoLeft();
+        }
+
+        public void SetImage(CharacterImage image) => Bitmap = new Bitmap(images[image]);
+
+        private void Swing()
+        {
+            if (isUp)
+            {
+                isUp = false;
+                GoDown();
+            }
+            else
+            {
+                isUp = true;
+                GoUp();
+            }
+        }
     }
 }

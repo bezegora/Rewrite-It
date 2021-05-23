@@ -9,7 +9,7 @@ namespace Rewrite_It
 {
     public class MainOffice
     {
-        private readonly Form1 form;
+        private readonly Controller controller;
 
         /// <summary>
         /// Функциональная кнопка "Одобрить"
@@ -28,34 +28,50 @@ namespace Rewrite_It
         /// </summary>
         public List<Label> DialogPhrases { get; private set; }
 
-        public Point DocumentLocation { get; set; } = new Point(-500, 0);
-        public Point NotebookLocation { get; set; } = new Point(100, 50);
+        private readonly GraphicObject document = new GraphicObject(new Bitmap(Properties.Resources.Document, 210, 180), 20);
+        private readonly GraphicObject notebook = new GraphicObject(new Bitmap(Properties.Resources.Notebook, 440, 540), new Point(100, 50));
+        private readonly GraphicObject officeTable = new GraphicObject(new Bitmap(Properties.Resources.OfficeTable), new Point(-70, 600));
+        private readonly GraphicObject headEditorBook = new GraphicObject(new Bitmap(Properties.Resources.HeadEditorBook2), new Point(110, 515));
+        private readonly GraphicObject officeComputer = new GraphicObject(new Bitmap(Properties.Resources.OfficeComputer, 580, 530), new Point(900, 320));
 
         public string LetterText { get; private set; }
 
-        public SoundPlayer PlayerBackground { get; } = new SoundPlayer(Properties.Resources.Background);
-
-        public MainOffice(Label option1, Label option2, Character person, Form1 form)
+        public MainOffice(Controller controller)
         {
-            Option1 = option1;
-            Option2 = option2;
-            Person = person;
+            Option1 = new Label
+            {
+                Text = "Одобрить",
+                Font = new Font(StringStyle.FontFamily, 19),
+                AutoSize = true,
+                ForeColor = Color.Green,
+                BorderStyle = BorderStyle.FixedSingle,
+                Location = new Point(-500, 0)
+            };
+            Option2 = new Label
+            {
+                Text = "Отклонить",
+                Font = new Font(StringStyle.FontFamily, 19),
+                AutoSize = true,
+                ForeColor = Color.Red,
+                BorderStyle = BorderStyle.FixedSingle,
+                Location = new Point(-500, 0)
+            };
+            Person = new Character(controller);
             DialogPhrases = new List<Label>();
-            this.form = form;
+            this.controller = controller;
 
             Option1.MouseDown += new MouseEventHandler(OnClickOnOption);
             Option2.MouseDown += new MouseEventHandler(OnClickOnOption);
         }
 
-        public void Paint(PaintEventArgs e)
+        public void Paint(Graphics graphics)
         {
-            var graphics = e.Graphics;
-            graphics.DrawImage(Person.Images[Person.CurrentImage], Person.Location.X, Person.Location.Y);
-            graphics.DrawImage(Properties.Resources.OfficeTable, -70, 600);
-            graphics.DrawImage(Properties.Resources.Notebook, NotebookLocation.X, NotebookLocation.Y);
-            graphics.DrawImage(Properties.Resources.HeadEditorBook, 150, 625);
-            graphics.DrawImage(Properties.Resources.OfficeComputer, 900, 300);
-            graphics.DrawImage(Properties.Resources.Document, DocumentLocation.X, DocumentLocation.Y);
+            Person.Paint(graphics);
+            officeTable.Paint(graphics);
+            notebook.Paint(graphics);
+            headEditorBook.Paint(graphics);
+            officeComputer.Paint(graphics);
+            document.Paint(graphics);
         }
 
         /// <summary>
@@ -69,17 +85,19 @@ namespace Rewrite_It
 
         public void EnterCharacter()
         {
-            //Здесь должно быть прописано завершение уровня, если очередь пуста.
-            if (form.Level.Events.Count == 0) return;
+            if (controller.Level.Events.Count == 0)
+            {
+                controller.ChangeInterface(Interface.DayEnd);
+                return;
+            }
             ClearDialog();
-            Person.Direction = MovingDirections.Right;
-            Person.CurrentImage = form.Level.Events.Peek().character;
-            Person.StartMoving();
-            form.PlaySound(Properties.Resources.DoorEnter);
+            Person.SetImage(controller.Level.Events.Peek().character);
+            Person.LetIn();
+            controller.Sounds.PlayDoorEnter();
 
             if (LetterText != null)
             {
-                form.Email.AddLetter("От: Генеральный директор Флорин Н. С.", LetterText);
+                controller.Email.AddLetter("От: Генеральный директор Флорин Н. С.", LetterText);
                 LetterText = null;
             }
         }
@@ -104,7 +122,7 @@ namespace Rewrite_It
             var label = new Label()
             {
                 Text = text,
-                Font = StringStyle.Font,
+                Font = StringStyle.TextFont,
                 AutoSize = true,
                 BackColor = Color.Transparent,
                 ForeColor = color,
@@ -117,7 +135,7 @@ namespace Rewrite_It
             while (label.Location.Y + label.Height + yStep > 550)
             {
                 var removedPhrase = DialogPhrases[0];
-                form.Controls.Remove(removedPhrase);
+                controller.Form.Controls.Remove(removedPhrase);
                 DialogPhrases.RemoveAt(0);
                 foreach (var phrase in DialogPhrases)
                     phrase.Location = new Point(phrase.Location.X, phrase.Location.Y - removedPhrase.Height - yStep);
@@ -132,7 +150,7 @@ namespace Rewrite_It
                 {
                     case ContentAlignment.MiddleRight:
                         phrase.Location = new Point(
-                            NotebookLocation.X + Properties.Resources.Notebook.Width - phrase.Width - 120,
+                            notebook.Position.X + Properties.Resources.Notebook.Width - phrase.Width - 120,
                             phrase.Location.Y);
                         break;
                     default: return;
@@ -142,11 +160,11 @@ namespace Rewrite_It
 
         private void OnClickOnOption(object sender, MouseEventArgs e)
         {
-            form.PlaySound(Properties.Resources.ChosenOption);
+            controller.Sounds.PlayChosenOption();
             RemoveOptions();
             var label = (Label)sender;
             var wait = new Timer { Interval = 700 };
-            DocumentLocation = new Point(-500, 0);
+            document.Position = Form1.Beyond;
             wait.Tick += (s, arg) =>
             {
                 if (label.Text == "Одобрить" || label.Text == "Отклонить")
@@ -162,8 +180,8 @@ namespace Rewrite_It
 
         private void RemoveOptions()
         {
-            Option1.Location = new Point(-500, 0);
-            Option2.Location = new Point(-500, 0);
+            Option1.Location = Form1.Beyond;
+            Option2.Location = Form1.Beyond;
         }
 
         /// <summary>
@@ -173,9 +191,9 @@ namespace Rewrite_It
         /// </summary>
         private void CheckForMistakes()
         {
-            var expectedMistakes = form.CheckMode.ExpectedMistakeAreas;
-            var selectedMistakes = form.CheckMode.SelectedMistakeAreas;
-            var textAreas = form.CheckMode.TextAreas;
+            var expectedMistakes = controller.CheckMode.ExpectedMistakeAreas;
+            var selectedMistakes = controller.CheckMode.SelectedMistakeAreas;
+            var textAreas = controller.CheckMode.TextAreas;
             var increaseInPopularity = 2;
             var letterText = new StringBuilder();
 
@@ -183,7 +201,7 @@ namespace Rewrite_It
             {
                 var hash = selectedMistake.Key;
                 var mistake = selectedMistake.Value;
-                var mistakeName = form.CheckMode.GetMistakeText(mistake.Type).name;
+                var mistakeName = controller.CheckMode.GetMistakeText(mistake.Type).name;
                 if (!expectedMistakes.ContainsKey(hash))
                 {
                     letterText.Append($"В области\n\"{textAreas[hash].Text}\"\nошибки \"{mistakeName}\" нет.\n\n");
@@ -195,12 +213,12 @@ namespace Rewrite_It
                     {
                         var expectedMistake = expectedMistakes[hash];
                         letterText.Append($"В области\n\"{textAreas[hash].Text}\"\nошибка \"{mistakeName}\" отмечена неверно. " +
-                            $"Правильная ошибка: \"{form.CheckMode.GetMistakeText(expectedMistake.Type).name}\".\n");
+                            $"Правильная ошибка: \"{controller.CheckMode.GetMistakeText(expectedMistake.Type).name}\".\n");
                         if (expectedMistake.Explanation != "") letterText.Append(expectedMistake.Explanation + "\n");
                         letterText.Append("\n");
                         increaseInPopularity--;
                     }
-                    else form.Level.IncreaseMistakesFound();
+                    else controller.Level.IncreaseMistakesFound();
                     expectedMistakes.Remove(hash);
                 }
             }
@@ -210,7 +228,7 @@ namespace Rewrite_It
                 var hash = expectedMistake.Key;
                 var mistake = expectedMistake.Value;
                 letterText.Append($"В области\n\"{textAreas[hash].Text}\"\nпропущена ошибка " +
-                $"\"{form.CheckMode.GetMistakeText(mistake.Type).name}\".\n");
+                $"\"{controller.CheckMode.GetMistakeText(mistake.Type).name}\".\n");
                     if (mistake.Explanation != "") letterText.Append(mistake.Explanation + "\n");
                 letterText.Append("\n");
                 increaseInPopularity--;
@@ -219,23 +237,38 @@ namespace Rewrite_It
             expectedMistakes.Clear();
             selectedMistakes.Clear();
             textAreas.Clear();
-            form.Level.AddIncreaseToPopularity(increaseInPopularity);
-            form.Level.IncreaseVerifiedArticles();
+            controller.Level.AddIncreaseToPopularity(increaseInPopularity);
+            controller.Level.IncreaseVerifiedArticles();
             LetterText = letterText.ToString();
         }
 
         public void ClearDialog()
         {
             foreach (var phrase in DialogPhrases)
-                form.Controls.Remove(phrase);
+                controller.Form.Controls.Remove(phrase);
             DialogPhrases.Clear();
         }
 
         public void AddLabelsToControls(params Label[] labels)
         {
-            if (!(Form1.CurrentInterface is Interface.MainOffice)) return;
+            if (!(controller.CurrentInterface is Interface.MainOffice)) return;
             foreach (var label in labels)
-                form.Controls.Add(label);
+                controller.Form.Controls.Add(label);
+        }
+
+        public bool IsClickedDocument() => AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(document.Position, document.Bitmap.Size));
+
+        public void CreateDocument()
+        {
+            controller.Sounds.PlayPaper();
+            document.Position = new Point(650, 630);
+            Option1.Location = new Point(150, 520);
+            Option2.Location = new Point(317, 520);
+        }
+
+        public void Tick()
+        {
+            Person.Tick();
         }
     }
 }

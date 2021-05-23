@@ -9,7 +9,7 @@ namespace Rewrite_It
         /// <summary>
         /// Очередь запланированных на уровень событий.
         /// </summary>
-        public Queue<(Action _event, NamesImages character)> Events { get; set; }
+        public Queue<(Action _event, CharacterImage character)> Events { get; set; }
 
         /// <summary>
         /// Список запланированных на уровень статей, которые будут рандомно попадаться при запуске события Article.
@@ -44,9 +44,12 @@ namespace Rewrite_It
         /// <summary>
         /// Доход за уровень.
         /// </summary>
-        public int Income { get; private set; } = 0;
+        public int Income
+        {
+            get { return 50 + 50 * IncreaseInPopularity + 15 * ApprovedArticlesCount; }
+        }
 
-        public LevelParameters(Queue<(Action, NamesImages)> events, List<StreamReader> articles)
+        public LevelParameters(Queue<(Action, CharacterImage)> events, List<StreamReader> articles)
         {
             var articleEventsCount = 0;
             foreach (var act in events)

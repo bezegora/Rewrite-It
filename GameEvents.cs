@@ -9,11 +9,13 @@ namespace Rewrite_It
     {
         public static Queue<Phrase> PhrasesQueue { get; set; } = new Queue<Phrase>();
         public static bool EventIsProgress { get; private set; } = false;
-        private static Form1 form;
 
-        public static void InitializeComponents(Form1 _form)
+        private static Controller controller;
+        private static Timer wait = new Timer();
+
+        public static void Initialize(Controller controller)
         {
-            form = _form;
+            GameEvents.controller = controller;
         }
 
         /// <summary>
@@ -23,9 +25,9 @@ namespace Rewrite_It
         public static void Article()
         {
             var random = new Random();
-            var index = random.Next(form.Level.Articles.Count - 1);
-            form.CheckMode.CreateArticleText(form.Level.Articles[index]);
-            form.Level.Articles.RemoveAt(index);
+            var index = random.Next(controller.Level.Articles.Count - 1);
+            controller.CheckMode.CreateArticleText(controller.Level.Articles[index]);
+            controller.Level.Articles.RemoveAt(index);
 
             var possiblePhrases = new[]
             {
@@ -35,13 +37,7 @@ namespace Rewrite_It
             };
             PhrasesQueue.Enqueue(new Phrase(possiblePhrases[random.Next(possiblePhrases.Length)], 2000));
 
-            Action createDocument = new Action(() =>
-            {
-                form.Office.DocumentLocation = new Point(650, 600);
-                //office.AddLabelsToControls(office.Option1, office.Option2);
-                form.Office.Option1.Location = new Point(150, 520);
-                form.Office.Option2.Location = new Point(317, 520);
-            });
+            Action createDocument = controller.Office.CreateDocument;
             possiblePhrases = new[]
             {
                 "Вот, пожалуйста.",
@@ -103,6 +99,7 @@ namespace Rewrite_It
 
         public static void ApprovingArticle()
         {
+            controller.Level.IncreaseApprivedArticles();
             var random = new Random();
             var possiblePhrases = new[]
 {
@@ -125,8 +122,7 @@ namespace Rewrite_It
             var wait = new Timer { Interval = waitingInMilliseconds };
             wait.Tick += (sender, e) =>
             {
-                form.Office.Person.Direction = MovingDirections.Left;
-                form.Office.Person.StartMoving();
+                controller.Office.Person.Leave();
                 wait.Stop();
             };
             wait.Start();
@@ -136,7 +132,7 @@ namespace Rewrite_It
         {
             if (PhrasesQueue.Count == 0 || EventIsProgress) return;
             EventIsProgress = true;
-            var wait = new Timer { Interval = 1 };
+            wait = new Timer { Interval = 1 };
             wait.Tick += ((sender, e) =>
             {
                 var phrase = PhrasesQueue.Dequeue();
@@ -147,10 +143,10 @@ namespace Rewrite_It
                     align = ContentAlignment.MiddleLeft;
                     color = Color.DarkBlue;
                 }
-                form.Office.AddNewDialogPhrase(phrase.Text, color, align);
+                controller.Office.AddNewDialogPhrase(phrase.Text, color, align);
                 phrase.ExtraEvent?.Invoke();
                 wait.Interval = phrase.WaitingInMilliseconds;
-                form.PlaySound(Properties.Resources.NextPhrase);
+                controller.Sounds.PlayNextPhrase();
                 if (PhrasesQueue.Count == 0)
                 {
                     wait.Stop();
@@ -159,5 +155,7 @@ namespace Rewrite_It
             });
             wait.Start();
         }
+
+        public static void SkipPhrase() => wait.Interval = 50;
     }
 }

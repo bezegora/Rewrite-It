@@ -35,7 +35,7 @@ namespace Rewrite_It
             var label = new Label()
             {
                 Text = title,
-                Font = StringStyle.Font,
+                Font = StringStyle.TextFont,
                 AutoSize = true,
                 BorderStyle = BorderStyle.FixedSingle,
                 //Location = new Point(...)       Позиция пришедшего в конец очереди письма. Можно задать не сейчас, а потом вот так: label.Location = new Point(...)

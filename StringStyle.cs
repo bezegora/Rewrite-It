@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Text;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,10 +26,15 @@ namespace Rewrite_It
         /// <summary>
         /// Стиль шрифта
         /// </summary>
-        public static Font Font { get; private set; }
+        public static Font TextFont { get; private set; }
 
-        public static void SetFontFamily(FontFamily fontFamily) => FontFamily = fontFamily;
-        public static void SetSolidBrush(SolidBrush brush) => Brush = brush;
-        public static void SetFont(Font font) => Font = font;
+        public static void Initialize()
+        {
+            var fontCollection = new PrivateFontCollection();
+            fontCollection.AddFontFile("PixelGeorgia.ttf");
+            FontFamily = fontCollection.Families[0];
+            Brush = new SolidBrush(Color.Black);
+            TextFont = new Font(FontFamily, 16);
+        }
     }
 }

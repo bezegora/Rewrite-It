@@ -13,18 +13,18 @@ namespace Rewrite_It
         /// <summary>
         /// Содержит фреймы книги с соответствующими открытыми вкладками
         /// </summary>
-        public Dictionary<Tabs, Bitmap> BookModes { get; }
+        public Dictionary<Tab, Bitmap> BookModes { get; }
 
         /// <summary>
         /// Текщая открытая вкладка в книге
         /// </summary>
-        public Tabs CurrentBookMode { get; private set; } = Tabs.Guide;
+        public Tab CurrentBookMode { get; private set; } = Tab.Guide;
 
-        public Point ExitButtonLocation { get; set; } = new Point(1490, 30);
+        private readonly ExitButton exitButton;
+        private readonly GraphicObject paper = new GraphicObject(new Bitmap(Properties.Resources.PaperBackground, 740, 840), new Point(650, 0));
 
+        //private readonly GraphicObject book = new GraphicObject(new Bitmap(Properties.Resources.HeadEditorBook2, 1338, 1146))
         public Point BookLocation { get; set; } = new Point(-10, 10);
-
-        public Point PaperLocation { get; set; } = new Point(650, 0);
 
         /// <summary>
         /// Соедржит все области с типами ошибок, которые рисуются непросредственно на форме.
@@ -62,21 +62,29 @@ namespace Rewrite_It
         /// Текущая выбранная область текста.
         /// Возвращает null, если область не выбрана.
         /// </summary>
-        public Label SelectedTextArea { get; private set; } = null;
+        public Label SelectedTextArea { get; set; }
 
         private readonly List<string> guidePage = new List<string>()
-        { "Здравствуйте, редактор!" };
+        { "Здравствуйте, редактор!" +
+            "\n\nС сегодняшнего дня Вы ответственны за популярность журнала и за все влекущиеся изменения." +
+            "\n\nОбращаем Ваше внимание на изменение популярности в зависимости от количества найденных ошибок:" +
+            "\n\n0-1 ошибка:  + к популярности" +
+            "\n2 ошибки:  популярность не изменится" +
+            "\n3+ ошибок:  - к популярности"
+        };
+
+        private bool showGuideText;
 
         /// <summary>
         /// Кортеж областей, которые сопоставляются прямо сейчас.
         /// Если оба элемента != null, любые клики мышью по объектам игнорируются.
         /// </summary>
-        public (Label, Label) IsMatching { get; private set; } = (null, null);
+        public (Label, Label) IsMatching { get; private set; }
 
         /// <summary>
         /// Цвет выбранной текстовой области
         /// </summary>
-        private readonly Color colorSelectedTextArea;
+        private readonly Color colorSelectedTextArea = Color.CornflowerBlue;
         private int currentMistakeY = 170;
 
         /// <summary>
@@ -89,51 +97,45 @@ namespace Rewrite_It
         /// </summary>
         private readonly Label descriptionMistake;
 
-        private readonly Form1 form;
+        private readonly Controller controller;
 
-        public CheckMode(Dictionary<Tabs, Bitmap> bookFrames,
-                         Color colorSelectedTextArea,
-                         Color colorPopUpWindowText,
-                         Form1 form)
+        public CheckMode(Controller controller)
         {
-            this.form = form;
-            BookModes = bookFrames;
-            AddNewMistake(MistakeType.NoNumbers);
-            AddNewMistake(MistakeType.IncorrectDefinitionTargetAudience);
-            AddNewMistake(MistakeType.TooMuchDetails);
-            AddNewMistake(MistakeType.ConfusedParagraphs);
-            this.colorSelectedTextArea = colorSelectedTextArea;
+            exitButton = new ExitButton(controller.Sounds);
+            this.controller = controller;
+            BookModes = new Dictionary<Tab, Bitmap>
+            {
+                [Tab.Guide] = new Bitmap(Properties.Resources.HeadBookTab1),
+                [Tab.MistakesList] = new Bitmap(Properties.Resources.HeadBookTab2),
+                [Tab.CensoredList] = new Bitmap(Properties.Resources.HeadBookTab3)
+            };
             descriptionTextArea = new Label()
             {
-                Font = StringStyle.Font,
-                ForeColor = colorPopUpWindowText,
+                Font = StringStyle.TextFont,
+                ForeColor = Color.DarkSlateGray,
                 AutoSize = true,
                 BorderStyle = BorderStyle.FixedSingle,
                 MaximumSize = new Size(500, 0)
             };
             descriptionMistake = new Label()
             {
-                Font = StringStyle.Font,
-                ForeColor = colorPopUpWindowText,
+                Font = StringStyle.TextFont,
+                ForeColor = Color.DarkSlateGray,
                 AutoSize = true,
                 BorderStyle = BorderStyle.FixedSingle,
                 Location = new Point(542, 73),
                 MaximumSize = new Size(600, 0)
             };
 
+            AddMistake(MistakeType.NoNumbers);
+            AddMistake(MistakeType.IncorrectDefinitionTargetAudience);
+            AddMistake(MistakeType.TooMuchDetails);
+            AddMistake(MistakeType.ConfusedParagraphs);
+
             var mistakesList = MistakesList.Values.Select(tuple => tuple.Item2).ToArray();
+
             CreateEventEnteringMouseOnMistakeAreas(mistakesList);
             CreateEventClickForAreas(mistakesList);
-        }
-
-        /// <summary>
-        /// Содержит все вкладки книги
-        /// </summary>
-        public enum Tabs
-        {
-            Guide,
-            MistakesList,
-            CensoredList
         }
 
         /// <summary>
@@ -141,18 +143,22 @@ namespace Rewrite_It
         /// Обновляет элементы управления для данного интерфейса.
         /// </summary>
         /// <param name="tab">Вкладка, которую нужно открыть</param>
-        public void UpdateStatus(Tabs tab)
+        public void UpdateStatus(Tab tab)
         {
             CurrentBookMode = tab;
+            showGuideText = false;
             var listMistakeLabels = MistakesList.Values.Select(tuple => tuple.Item2);
-            foreach (var e in listMistakeLabels) form.Controls.Remove(e);
+            foreach (var e in listMistakeLabels) controller.Form.Controls.Remove(e);
             if (SelectedTextArea != null && MistakesList.ContainsKey(SelectedTextArea.GetHashCode()))
                 SelectedTextArea = null;
-            if (tab == Tabs.MistakesList)
+            if (tab == Tab.MistakesList)
             {
-                foreach (var e in listMistakeLabels) form.Controls.Add(e);
+                foreach (var e in listMistakeLabels) controller.Form.Controls.Add(e);
             }
-            foreach (var e in TextAreas.Values) form.Controls.Add(e);
+            if (tab == Tab.Guide)
+                showGuideText = true;
+
+            foreach (var e in TextAreas.Values) controller.Form.Controls.Add(e);
         }
 
         /// <summary>
@@ -208,13 +214,14 @@ namespace Rewrite_It
                 if (SelectedTextArea == nextArea)
                 {
                     SelectedTextArea = null;
+                    controller.Sounds.PlayCancel();
                     return;
                 }
                 SelectedTextArea = nextArea;
                 if (nextArea != null)
                 {
                     nextArea.BackColor = colorSelectedTextArea;
-                    form.PlaySound(Properties.Resources.ChosenOption);
+                    controller.Sounds.PlayChosenOption();
                 }
             }
         }
@@ -247,7 +254,7 @@ namespace Rewrite_It
                 if (SelectedMistakeAreas[textHash].Type == MistakesList[mistakeHash].Item1) return;
                 SelectedMistakeAreas.Remove(textHash);
             }
-            form.PlaySound(Properties.Resources.Click);
+            controller.Sounds.PlayClick();
             textArea.BackColor = colorSelectedTextArea;
             mistakeArea.BackColor = colorSelectedTextArea;
             RemoveTextDescription(descriptionMistake);
@@ -261,7 +268,8 @@ namespace Rewrite_It
                 textArea.BackColor = Color.Transparent;
                 mistakeArea.BackColor = Color.Transparent;
                 textArea.ForeColor = Color.Red;
-                SetSelectedTextArea(null);
+                //SetSelectedTextArea(null);
+                SelectedTextArea = null;
                 wait.Stop();
             };
         }
@@ -274,28 +282,29 @@ namespace Rewrite_It
         {
             SelectedMistakeAreas.Remove(textArea.GetHashCode());
             textArea.ForeColor = StringStyle.Brush.Color;
-            SetSelectedTextArea(null);
+            //SetSelectedTextArea(null);
+            SelectedTextArea = null;
             RemoveTextDescription(descriptionTextArea);
-            form.PlaySound(Properties.Resources.Promotion);
+            controller.Sounds.PlayPromotion();
         }
 
         /// <summary>
         /// Заставлет исчезнуть всплывающее окно с описанием.
         /// </summary>
         /// <param name="popUpWindow"></param>
-        private void RemoveTextDescription(Label popUpWindow) => form.Controls.Remove(popUpWindow);
+        private void RemoveTextDescription(Label popUpWindow) => controller.Form.Controls.Remove(popUpWindow);
 
         /// <summary>
         /// Добавляет новую область с ошибкой в словарь, из которого эти области рисуются на форме последовательно друг за другом.
         /// </summary>
         /// <param name="mistake"></param>
-        public void AddNewMistake(MistakeType mistake)
+        public void AddMistake(MistakeType mistake)
         {
             var (name, description) = GetMistakeText(mistake);
             var label = new Label()
             {
                 Text = name,
-                Font = StringStyle.Font,
+                Font = StringStyle.TextFont,
                 AutoSize = true,
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = Color.Transparent,
@@ -314,8 +323,8 @@ namespace Rewrite_It
         /// <param name="textFile">Файл формата .txt со статьёй</param>
         public void CreateArticleText(StreamReader textFile)
         {
-            var labelX = PaperLocation.X + 10;
-            var labelY = PaperLocation.Y + 5;
+            var labelX = paper.Position.X + 10;
+            var labelY = paper.Position.Y + 5;
 
             CreateAndAlignLabel(textFile.ReadLine(), ContentAlignment.MiddleCenter);
             CreateAndAlignLabel(textFile.ReadLine(), ContentAlignment.MiddleRight);
@@ -340,8 +349,8 @@ namespace Rewrite_It
                 var image = Properties.Resources.PaperBackground;
                 var label = GetLabel(text, new Point(labelX, labelY));
                 label.Location = align == ContentAlignment.MiddleCenter
-                    ? new Point((PaperLocation.X + image.Width - label.Width) / 2 + 115, label.Location.Y)
-                    : new Point(PaperLocation.X + image.Width - label.Width - 420, label.Location.Y);
+                    ? new Point((paper.Position.X + image.Width - label.Width) / 2 + 115, label.Location.Y)
+                    : new Point(paper.Position.X + image.Width - label.Width - 420, label.Location.Y);
                 TextAreas.Add(label.GetHashCode(), label);
             }
 
@@ -350,7 +359,7 @@ namespace Rewrite_It
                 var result = new Label()
                 {
                     Text = text,
-                    Font = StringStyle.Font,
+                    Font = StringStyle.TextFont,
                     AutoSize = true,
                     BorderStyle = BorderStyle.FixedSingle,
                     BackColor = Color.Transparent,
@@ -438,10 +447,10 @@ namespace Rewrite_It
                 {
                     var label = sender as Label;
                     descriptionMistake.Text = MistakesList[label.GetHashCode()].Item3;
-                    form.Controls.Add(descriptionMistake);
+                    controller.Form.Controls.Add(descriptionMistake);
                     descriptionMistake.BringToFront();
                 };
-                labels[i].MouseLeave += (sender, e) => form.Controls.Remove(descriptionMistake);
+                labels[i].MouseLeave += (sender, e) => controller.Form.Controls.Remove(descriptionMistake);
             }
         }
 
@@ -464,29 +473,32 @@ namespace Rewrite_It
                     var x = label.Location.X;
                     if (x > 700) x = label.Location.X + label.Width - descriptionTextArea.Width;
                     descriptionTextArea.Location = new Point(x, label.Location.Y + label.Height);
-                    form.Controls.Add(descriptionTextArea);
+                    controller.Form.Controls.Add(descriptionTextArea);
                     descriptionTextArea.BringToFront();
                 };
                 labels[i].MouseLeave += (sender, e) => RemoveTextDescription(descriptionTextArea);
             }
         }
 
-        public void Paint(PaintEventArgs e)
+        public void Paint(Graphics graphics)
         {
-            var graphics = e.Graphics;
             graphics.DrawImage(BookModes[CurrentBookMode], BookLocation.X, BookLocation.Y);
-            graphics.DrawImage(Properties.Resources.ExitFromCheckMode, ExitButtonLocation.X, ExitButtonLocation.Y);
-            graphics.DrawImage(Properties.Resources.PaperBackground, PaperLocation.X, PaperLocation.Y);
+            exitButton.Paint(graphics);
+            paper.Paint(graphics);
             if (IsMatching.Item1 != null)
                 graphics.DrawLine(new Pen(colorSelectedTextArea),
                     IsMatching.Item1.Location.X, IsMatching.Item1.Location.Y + IsMatching.Item1.Height / 2,
                     IsMatching.Item2.Location.X + IsMatching.Item2.Width, IsMatching.Item2.Location.Y + IsMatching.Item2.Height / 2);
             switch (CurrentBookMode)
             {
-                case Tabs.Guide: CreateTitle("Руководство главного редактора"); break;
-                case Tabs.MistakesList: CreateTitle("Перечень ошибок"); break;
-                case Tabs.CensoredList: CreateTitle("Цензурный перечень"); break;
+                case Tab.Guide: CreateTitle("Руководство главного редактора"); break;
+                case Tab.MistakesList: CreateTitle("Перечень ошибок"); break;
+                case Tab.CensoredList: CreateTitle("Цензурный перечень"); break;
             }
+
+            if (showGuideText)
+                graphics.DrawString(guidePage[0], StringStyle.TextFont, StringStyle.Brush, new Rectangle(
+                    BookLocation.X + 20, BookLocation.Y + 160, 500, 600));
 
             void CreateTitle(string text) =>
                 graphics.DrawString(text,
@@ -494,6 +506,13 @@ namespace Rewrite_It
                                     StringStyle.Brush,
                                     new Rectangle(15, 90, 500, 70),
                                     new StringFormat() { Alignment = StringAlignment.Center });
+        }
+
+        public bool IsClickedExitButton() => AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(exitButton.Position, exitButton.Bitmap.Size));
+
+        public void Tick()
+        {
+            exitButton.Tick();
         }
     }
 }
