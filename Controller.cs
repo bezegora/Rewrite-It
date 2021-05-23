@@ -96,12 +96,12 @@ namespace Rewrite_It
                 Sounds.PlayCheckMode();
                 ChangeInterface(Properties.Resources.OfficeBackground, Interface.MainOffice);
             }
-            else if (AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(new Point(CheckMode.BookLocation.X + 143, CheckMode.BookLocation.Y + 6), new Size(112, 56))))
+            else if (AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(new Point(CheckMode.BookLocation.X + 143, CheckMode.BookLocation.Y + 6), new Size(112, 80))))
             {
                 Sounds.PlayPaper();
                 CheckMode.UpdateStatus(Tab.MistakesList);
             }
-            else if (AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(new Point(CheckMode.BookLocation.X + 28, CheckMode.BookLocation.Y + 6), new Size(112, 56))))
+            else if (AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(new Point(CheckMode.BookLocation.X + 28, CheckMode.BookLocation.Y + 6), new Size(112, 80))))
             {
                 Sounds.PlayPaper();
                 CheckMode.UpdateStatus(Tab.Guide);

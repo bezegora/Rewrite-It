@@ -60,7 +60,6 @@
     <Compile Include="CharacterImage.cs" />
     <Compile Include="CheckMode.cs" />
     <Compile Include="Controller.cs" />
-    <Compile Include="Direction.cs" />
     <Compile Include="ExitButton.cs" />
     <Compile Include="GraphicObject.cs" />
     <Compile Include="Interface.cs" />
