@@ -17,7 +17,7 @@ namespace Rewrite_It
         /// </summary>
         private readonly Dictionary<CharacterImage, Image> images;
 
-        public Character(Controller controller) : base(new Point(-500, 170), 15)
+        public Character(Controller controller) : base(new Point(-500, 150), 15)
         {
             images = new Dictionary<CharacterImage, Image>()
             {
@@ -56,15 +56,15 @@ namespace Rewrite_It
                     Swing();
             }
 
-            if (Position.Y < 165)
+            if (Position.Y < 145)
             {
-                Position = new Point(Position.X, 165);
+                Position = new Point(Position.X, 145);
                 Stop();
                 waitBeforeChangingPosition = 30;
             }
-            else if (Position.Y > 175)
+            else if (Position.Y > 155)
             {
-                Position = new Point(Position.X, 175);
+                Position = new Point(Position.X, 155);
                 Stop();
                 waitBeforeChangingPosition = 30;
             }
@@ -76,7 +76,7 @@ namespace Rewrite_It
         {
             MovementSpeed = 20;
             waitBeforeChangingPosition = 0;
-            Position = new Point(Position.X, 170);
+            Position = new Point(Position.X, 150);
             GoLeft();
         }
 

@@ -170,7 +170,11 @@ namespace Rewrite_It
                 if (label.Text == "Одобрить" || label.Text == "Отклонить")
                 {
                     CheckForMistakes();
-                    if (label.Text == "Одобрить") GameEvents.ApprovingArticle();
+                    if (label.Text == "Одобрить")
+                    {
+                        controller.Level.AddIncreaseToPopularity(2 - controller.CheckMode.ExpectedMistakeAreas.Count);
+                        GameEvents.ApprovingArticle();
+                    }
                     else GameEvents.RejectionArticle();
                 }
                 wait.Stop();
@@ -194,7 +198,7 @@ namespace Rewrite_It
             var expectedMistakes = controller.CheckMode.ExpectedMistakeAreas;
             var selectedMistakes = controller.CheckMode.SelectedMistakeAreas;
             var textAreas = controller.CheckMode.TextAreas;
-            var increaseInPopularity = 2;
+            //var increaseInPopularity = 2;
             var letterText = new StringBuilder();
 
             foreach (var selectedMistake in selectedMistakes)
@@ -205,7 +209,7 @@ namespace Rewrite_It
                 if (!expectedMistakes.ContainsKey(hash))
                 {
                     letterText.Append($"В области\n\"{textAreas[hash].Text}\"\nошибки \"{mistakeName}\" нет.\n\n");
-                    increaseInPopularity--;
+                    //increaseInPopularity--;
                 }
                 else
                 {
@@ -216,7 +220,7 @@ namespace Rewrite_It
                             $"Правильная ошибка: \"{controller.CheckMode.GetMistakeText(expectedMistake.Type).name}\".\n");
                         if (expectedMistake.Explanation != "") letterText.Append(expectedMistake.Explanation + "\n");
                         letterText.Append("\n");
-                        increaseInPopularity--;
+                        //increaseInPopularity--;
                     }
                     else controller.Level.IncreaseMistakesFound();
                     expectedMistakes.Remove(hash);
@@ -231,13 +235,13 @@ namespace Rewrite_It
                 $"\"{controller.CheckMode.GetMistakeText(mistake.Type).name}\".\n");
                     if (mistake.Explanation != "") letterText.Append(mistake.Explanation + "\n");
                 letterText.Append("\n");
-                increaseInPopularity--;
+                //increaseInPopularity--;
             }
 
             expectedMistakes.Clear();
             selectedMistakes.Clear();
             textAreas.Clear();
-            controller.Level.AddIncreaseToPopularity(increaseInPopularity);
+            //controller.Level.AddIncreaseToPopularity(increaseInPopularity);
             controller.Level.IncreaseVerifiedArticles();
             LetterText = letterText.ToString();
         }
