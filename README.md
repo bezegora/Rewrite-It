@@ -22,6 +22,11 @@ desktop приложение
 Windows Forms (является частью .NET Framework)
 
 **Работа пользователя с системой:**
+
+УБЕДИТЕСЬ, ЧТО РАЗМЕР ОБЪЕКТОВ НА МОНИТОРЕ ИМЕЕТ SCALE 125%
+
+![ScreenShot](https://imageup.ru/img100/3757396/125.jpg)
+
 1. Запустить файл Rewrite-It.csproj
 2. Скомпилировать программу
 
@@ -29,7 +34,7 @@ Windows Forms (является частью .NET Framework)
 
 Иметь:
 * Visual Studio 3.5 — 4.8 или выше **ИЛИ**
-* JetBrains Rider 2021 или выше
+* JetBrains Rider 2020 или выше
 
 **Структура приложения:**
 
