@@ -55,10 +55,10 @@ namespace Rewrite_It
             var letter = new Letter(label, content);
             letters.Insert(0, letter);
             lettersInfo.Add(label.GetHashCode(), letter);
-            ReculculatePositions();
+            RecalculatePositions();
         }
 
-        private void ReculculatePositions()
+        private void RecalculatePositions()
         {
             for (var i = 0; i < letters.Count; i++)
             {

@@ -198,7 +198,7 @@ namespace Rewrite_It
                 case MistakeType.PseudoLanguage: return 
                         ("Псевдоязык целевой аудитории",
                             "Эту ошибку можно обозначить как \"попытка сойти за своего\" или \"попытка в сленг\"." +
-                            "\nКазаться \"быть своим\" — гиблая стратегия, люди чувствуют если вы пытаетесь говорить" +
+                            "\nКазаться \"быть своим\" — гиблая стратегия, люди чувствуют если вы пытаетесь говорить " +
                             "на языке, которым вы не владете");
             }
             throw new ArgumentException();
@@ -442,9 +442,9 @@ namespace Rewrite_It
                 {
                     if (CheckHasMatching()) return;
                     var label = sender as Label;
-                    if (e.Button == System.Windows.Forms.MouseButtons.Left)
+                    if (e.Button == MouseButtons.Left)
                         SetSelectedTextArea(label);
-                    else if (e.Button == System.Windows.Forms.MouseButtons.Right &&
+                    else if (e.Button == MouseButtons.Right &&
                              SelectedMistakeAreas.ContainsKey(label.GetHashCode()))
                         Undo(label);
                 };

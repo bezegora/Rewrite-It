@@ -37,11 +37,11 @@ namespace Rewrite_It
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
-            this.WindowState = FormWindowState.Maximized;
-            this.BackgroundImageLayout = ImageLayout.Center;
-            this.BackgroundImageLayout = ImageLayout.Stretch;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
+            WindowState = FormWindowState.Maximized;
+            BackgroundImageLayout = ImageLayout.Center;
+            BackgroundImageLayout = ImageLayout.Stretch;
         }
 
         private void OnPaint(object sender, PaintEventArgs e) => controller.Paint(e.Graphics);
