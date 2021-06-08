@@ -36,11 +36,13 @@ namespace Rewrite_It
 
         private readonly Action goToCheckMode;
         private readonly Action goToDayEnd;
+        private readonly Action goToEmail;
 
         public string LetterText { get; private set; }
 
-        public MainOffice(Controller controller, Action goToCheckMode, Action goToDayEnd)
+        public MainOffice(Controller controller, Action goToCheckMode, Action goToDayEnd, Action goToEmail)
         {
+            this.goToEmail = goToEmail;
             this.goToCheckMode = goToCheckMode;
             this.goToDayEnd = goToDayEnd;
             Option1 = new Label
@@ -85,8 +87,9 @@ namespace Rewrite_It
         public void Change(Form1 form)
         {
             form.BackgroundImage = Properties.Resources.OfficeBackground;
-            AddLabelsToControls(DialogPhrases.ToArray());
-            AddLabelsToControls(Option1, Option2);
+            AuxiliaryMethods.AddLabelsToControls(controller.Form.Controls, DialogPhrases.ToArray());
+            AuxiliaryMethods.AddLabelsToControls(controller.Form.Controls, Option1, Option2);
+            controller.Sounds.PlayOfficeBackground();
         }
 
         public void EnterCharacter()
@@ -103,7 +106,9 @@ namespace Rewrite_It
 
             if (LetterText != null)
             {
-                controller.Email.AddLetter("От: Генеральный директор Флорин Н. С.", LetterText);
+                controller.Email.AddLetter(controller.Stats.Date, "Ген. директор", "Отчёт по ошибкам", LetterText);
+                controller.Sounds.PlayMessage();
+                officeComputer.Bitmap = new Bitmap(Properties.Resources.OfficeComputerMessage, 580, 530);
                 LetterText = null;
             }
         }
@@ -147,7 +152,8 @@ namespace Rewrite_It
                     phrase.Location = new Point(phrase.Location.X, phrase.Location.Y - removedPhrase.Height - yStep);
             }
             AlignDialogPhrase(label);
-            AddLabelsToControls(label);
+            if (controller.CurrentInterface == this)
+                AuxiliaryMethods.AddLabelsToControls(controller.Form.Controls, label);
 
             void AlignDialogPhrase(Label phrase)
             {
@@ -214,7 +220,7 @@ namespace Rewrite_It
                 var mistakeName = controller.CheckMode.GetMistakeText(mistake.Type).name;
                 if (!expectedMistakes.ContainsKey(hash))
                 {
-                    letterText.Append($"В области\n\"{textAreas[hash].Text}\"\nошибки \"{mistakeName}\" нет.\n\n");
+                    letterText.Append($"В области\r\n\"{textAreas[hash].Text}\"\r\nошибки \"{mistakeName}\" нет.\r\n\r\n");
                     //increaseInPopularity--;
                 }
                 else
@@ -222,10 +228,10 @@ namespace Rewrite_It
                     if (mistake.Type != expectedMistakes[hash].Type)
                     {
                         var expectedMistake = expectedMistakes[hash];
-                        letterText.Append($"В области\n\"{textAreas[hash].Text}\"\nошибка \"{mistakeName}\" отмечена неверно. " +
-                            $"Правильная ошибка: \"{controller.CheckMode.GetMistakeText(expectedMistake.Type).name}\".\n");
-                        if (expectedMistake.Explanation != "") letterText.Append(expectedMistake.Explanation + "\n");
-                        letterText.Append("\n");
+                        letterText.Append($"В области\r\n\"{textAreas[hash].Text}\"\r\nошибка \"{mistakeName}\" отмечена неверно. " +
+                            $"Правильная ошибка: \"{controller.CheckMode.GetMistakeText(expectedMistake.Type).name}\".\r\n");
+                        if (expectedMistake.Explanation != "") letterText.Append(expectedMistake.Explanation + "\r\n");
+                        letterText.Append("\r\n");
                         //increaseInPopularity--;
                     }
                     else controller.Level.IncreaseMistakesFound();
@@ -237,10 +243,10 @@ namespace Rewrite_It
             {
                 var hash = expectedMistake.Key;
                 var mistake = expectedMistake.Value;
-                letterText.Append($"В области\n\"{textAreas[hash].Text}\"\nпропущена ошибка " +
-                $"\"{controller.CheckMode.GetMistakeText(mistake.Type).name}\".\n");
-                    if (mistake.Explanation != "") letterText.Append(mistake.Explanation + "\n");
-                letterText.Append("\n");
+                letterText.Append($"В области\r\n\"{textAreas[hash].Text}\"\r\nпропущена ошибка " +
+                $"\"{controller.CheckMode.GetMistakeText(mistake.Type).name}\".\r\n");
+                    if (mistake.Explanation != "") letterText.Append(mistake.Explanation + "\r\n");
+                letterText.Append("\r\n");
                 //increaseInPopularity--;
             }
 
@@ -249,7 +255,12 @@ namespace Rewrite_It
             textAreas.Clear();
             //controller.Level.AddIncreaseToPopularity(increaseInPopularity);
             controller.Level.IncreaseVerifiedArticles();
-            LetterText = letterText.ToString();
+            if (letterText.Length != 0)
+            {
+                letterText.Append("С уважением," +
+                    "\r\nГенеральный директор Флорин Н. С.");
+                LetterText = letterText.ToString();
+            }
         }
 
         public void ClearDialog()
@@ -259,14 +270,11 @@ namespace Rewrite_It
             DialogPhrases.Clear();
         }
 
-        public void AddLabelsToControls(params Label[] labels)
-        {
-            //if (!(controller.CurrentInterface is Interface.MainOffice)) return;
-            foreach (var label in labels)
-                controller.Form.Controls.Add(label);
-        }
+        private bool IsClickedDocument() => 
+            AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(document.Position, document.Bitmap.Size));
 
-        public bool IsClickedDocument() => AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(document.Position, document.Bitmap.Size));
+        private bool IsClickedComputer() =>
+            AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(officeComputer.Position + new Size(130, 50), officeComputer.Bitmap.Size - new Size(175, 200)));
 
         public void CreateDocument()
         {
@@ -284,9 +292,11 @@ namespace Rewrite_It
         public void MouseDown() 
         {
             if (IsClickedDocument())
-            {
-                controller.Sounds.PlayCheckMode();
                 goToCheckMode();
+            else if (IsClickedComputer())
+            {
+                officeComputer.Bitmap = new Bitmap(Properties.Resources.OfficeComputer, 580, 530);
+                goToEmail();
             }
             else GameEvents.SkipPhrase();
         }

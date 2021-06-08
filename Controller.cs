@@ -31,9 +31,12 @@ namespace Rewrite_It
             this.Form = form;
             Stats = new GameStats();
             CheckMode = new CheckMode(this, () => ChangeInterface(Office));
-            Email = new Email(Stats, form.Controls, Sounds);
+            Email = new Email(form.Controls, Sounds, () => ChangeInterface(Office));
             DayEnd = new DayEnd(this);
-            Office = new MainOffice(this, () => ChangeInterface(CheckMode), () => ChangeInterface(DayEnd));
+            Office = new MainOffice(this, 
+                () => ChangeInterface(CheckMode), 
+                () => ChangeInterface(DayEnd), 
+                () => ChangeInterface(Email));
 
             ChangeInterface(Office);
 
@@ -67,6 +70,7 @@ namespace Rewrite_It
         public void Tick()
         {
             CurrentInterface.Tick();
+            Sounds.Tick();
             GameEvents.StartEvent();
         }
 

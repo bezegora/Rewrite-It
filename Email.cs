@@ -8,75 +8,126 @@ namespace Rewrite_It
     public class Email : IUserInterface
     {
         private readonly Control.ControlCollection controls;
-        private readonly GameStats stats;
         private readonly Sounds sounds;
 
-        private readonly List<Label> letters = new List<Label>();
-        private readonly Dictionary<int, (string Date, string Content, bool Unread)> lettersInformation 
-            = new Dictionary<int, (string, string, bool)>();
-        private readonly TextBox contentText;
+        private readonly Dictionary<int, Letter> lettersInfo = new Dictionary<int, Letter>();
+        private readonly List<Letter> letters = new List<Letter>();
+        private readonly TextBox content;
+        private Label selected;
 
-        public Email(GameStats stats, Control.ControlCollection controls, Sounds sounds)
+        private readonly Action goToMainOffice;
+
+        public Email(Control.ControlCollection controls, Sounds sounds, Action goToMainOffice)
         {
-            this.stats = stats;
+            this.goToMainOffice = goToMainOffice;
             this.controls = controls;
             this.sounds = sounds;
-            contentText = new TextBox
+            content = new TextBox
             {
                 ReadOnly = true,
                 ScrollBars = ScrollBars.Vertical,
-                Font = StringStyle.TextFont,
-                Size = new Size(800, 800),
-                Location = new Point(400, 100)
+                Font = new Font(StringStyle.FontFamily, 18),
+                Size = new Size(1190, 650),
+                Location = new Point(323, 160),
+                Multiline = true
             };
         }
 
-        public void AddLetter(string title, string content)
+        public void AddLetter(DateTime date, string sender, string title, string content)
         {
-            // Здесь обработка ситуации, когда количество писем сейчас превысит максимум.
-            // Нужно убрать первое письмо из letters, а у остальных сдвинуть вверх координату Y на фиксированное значение
-            // Причём нужно также убрать из lettersInformation содержание удалённого письма.
-            // Лучше это всё вынести в отдельный метод.
-            var label = new Label()
+            if (lettersInfo.Count > 4)
             {
-                Text = title,
-                Font = StringStyle.TextFont,
-                AutoSize = true,
+                lettersInfo.Remove(letters[0].Label.GetHashCode());
+                letters.RemoveAt(letters.Count - 1);
+            }
+
+            var label = new Label
+            {
+                Text = $"От: {sender}" +
+                    $"\nТема: {title}" +
+                    $"\n{date:D}",
+                Font = new Font(StringStyle.FontFamily, 14),
+                Size = new Size(300, 110),
                 BorderStyle = BorderStyle.FixedSingle,
-                //Location = new Point(...)       Позиция пришедшего в конец очереди письма. Можно задать не сейчас, а потом вот так: label.Location = new Point(...)
+                BackColor = Color.LightYellow
             };
-            letters.Add(label);
-            lettersInformation.Add(label.GetHashCode(), (stats.Date.ToString("D"), content, true));
+            label.MouseDown += MouseDownOnLetter;
+            var letter = new Letter(label, content);
+            letters.Insert(0, letter);
+            lettersInfo.Add(label.GetHashCode(), letter);
+            ReculculatePositions();
+        }
+
+        private void ReculculatePositions()
+        {
+            for (var i = 0; i < letters.Count; i++)
+            {
+                letters[i].Label.Location = new Point(22, 240 + i * 120);
+            }
+        }
+
+        private void MouseDownOnLetter(object sender, MouseEventArgs e)
+        {
+            var label = sender as Label;
+            if (label.BackColor == Color.White || label.BackColor == Color.LightYellow)
+            {
+                RemoveSelected();
+                sounds.PlayChosenOption();
+                SetSelected(label);
+            }
+            else
+            {
+                sounds.PlayCancel();
+                RemoveSelected();
+            }
+        }
+
+        private void SetSelected(Label value)
+        {
+            content.Text = lettersInfo[value.GetHashCode()].Content;
+            value.BackColor = Color.CornflowerBlue;
+            selected = value;
+        }
+
+        private void RemoveSelected()
+        {
+            content.Text = "";
+            if (selected != null)
+                selected.BackColor = Color.White;
+            selected = null;
         }
 
         public void Change(Form1 form)
         {
             form.BackgroundImage = Properties.Resources.EmailBackground;
+            if (letters.Count == 0)
+                content.Text = "Входящих писем пока нет.";
+            else RemoveSelected();
+            foreach (var letter in letters)
+                AuxiliaryMethods.AddLabelsToControls(controls, letter.Label);
+            controls.Add(content);
         }
 
-        public void MouseDown() { }
+        public void MouseDown() 
+        {
+            if (AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(1475, 0, 50, 80)))
+                goToMainOffice();
+        }
 
         public void Paint(Graphics graphics) { }
 
-        public void Tick()
-        {
-            throw new NotImplementedException();
-        }
-
-        // Далее обработка события клика мышью по Label-письму, приводящее к отображению его содержания.
-        // При первом клике на Label-письмо оно должно считаться прочитанным и изменить цвет фона (чтобы понять, что оно уже прочитано)
+        public void Tick() { }
     }
 
     class Letter
     {
-        public DateTime Date { get; }
+        public Label Label { get; }
         public string Content { get; }
-        public bool Readed { get; set; } = false;
 
-        public Letter(DateTime date, string content)
+        public Letter(Label label, string content)
         {
-            Date = date;
             Content = content;
+            Label = label;
         }
     }
 }

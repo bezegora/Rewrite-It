@@ -9,5 +9,8 @@ namespace Rewrite_It
             Cursor.Position.X >= rectangle.X && Cursor.Position.Y >= rectangle.Y &&
             Cursor.Position.X <= rectangle.X + rectangle.Width &&
             Cursor.Position.Y <= rectangle.Y + rectangle.Height;
+
+        public static void AddLabelsToControls(Control.ControlCollection controls, params Label[] labels) =>
+            controls.AddRange(labels);
     }
 }

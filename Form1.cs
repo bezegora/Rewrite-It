@@ -31,8 +31,8 @@ namespace Rewrite_It
 
         private void OnTick(object sender, EventArgs e)
         {
-            Invalidate();
             controller.Tick();
+            Invalidate();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -47,11 +47,5 @@ namespace Rewrite_It
         private void OnPaint(object sender, PaintEventArgs e) => controller.Paint(e.Graphics);
 
         private void OnMouseDown(object sender, MouseEventArgs e) => controller.MouseDown();
-
-        //public void AddLabelsToControls(params Label[] labels)
-        //{
-        //    foreach (var label in labels)
-        //        Controls.Add(label);
-        //}
     }
 }
