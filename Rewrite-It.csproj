@@ -63,6 +63,7 @@
     <Compile Include="ExitButton.cs" />
     <Compile Include="GraphicObject.cs" />
     <Compile Include="Interface.cs" />
+    <Compile Include="IUserInterface.cs" />
     <Compile Include="MistakeType.cs" />
     <Compile Include="Sounds.cs" />
     <Compile Include="Phrase.cs" />
@@ -259,6 +260,9 @@
     <None Include="Sounds\CursorNotHovered.wav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EmailBackground.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

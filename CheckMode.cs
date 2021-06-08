@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Rewrite_It
 {
-    public class CheckMode
+    public class CheckMode : IUserInterface
     {
         /// <summary>
         /// Содержит фреймы книги с соответствующими открытыми вкладками
@@ -22,8 +22,8 @@ namespace Rewrite_It
 
         private readonly ExitButton exitButton;
         private readonly GraphicObject paper = new GraphicObject(new Bitmap(Properties.Resources.PaperBackground, 740, 840), new Point(650, 0));
-
         //private readonly GraphicObject book = new GraphicObject(new Bitmap(Properties.Resources.HeadEditorBook2, 1338, 1146))
+
         public Point BookLocation { get; set; } = new Point(-10, 10);
 
         /// <summary>
@@ -64,24 +64,6 @@ namespace Rewrite_It
         /// </summary>
         public Label SelectedTextArea { get; set; }
 
-        private readonly List<string> guidePage = new List<string>()
-        {
-            "ВНИМАНИЕ!" +
-            "\nЗдравствуйте, редактор!" +
-            "\n\nС сегодняшнего дня Вы ответственны за популярность журнала и за все влекущиеся изменения." +
-            "\n\nПервым делом изучите перечень самых частых ошибок, который находится в следующей вкладке" +
-            "\n\nКак только вам встретится неугодный текст, отметьте все неточности и ОТКЛОНИТЕ его. Позже вам придет исправленный вариант" +
-            "\n\nЕсли встретите статью, которая не содержит ошибок, ваша ОБЯЗАННОСТЬ её ОДОБРИТЬ"
-            // "Здравствуйте, редактор!" +
-            // "\n\nС сегодняшнего дня Вы ответственны за популярность журнала и за все влекущиеся изменения." +
-            // "\n\nОбращаем Ваше внимание на изменение популярности в зависимости от количества найденных ошибок:" +
-            // "\n\n0-1 ошибка:  + к популярности" +
-            // "\n2 ошибки:  популярность не изменится" +
-            // "\n3+ ошибок:  - к популярности"
-        };
-
-        private bool showGuideText;
-
         /// <summary>
         /// Кортеж областей, которые сопоставляются прямо сейчас.
         /// Если оба элемента != null, любые клики мышью по объектам игнорируются.
@@ -105,11 +87,30 @@ namespace Rewrite_It
         private readonly Label descriptionMistake;
 
         private readonly Controller controller;
+        private readonly Action goToMainOffice;
 
-        public CheckMode(Controller controller)
+        private bool showGuideText;
+        private readonly List<string> guidePage = new List<string>()
+        {
+            "ВНИМАНИЕ!" +
+            "\nЗдравствуйте, редактор!" +
+            "\n\nС сегодняшнего дня Вы ответственны за популярность журнала и за все влекущиеся изменения." +
+            "\n\nПервым делом изучите перечень самых частых ошибок, который находится в следующей вкладке" +
+            "\n\nКак только вам встретится неугодный текст, отметьте все неточности и ОТКЛОНИТЕ его. Позже вам придет исправленный вариант" +
+            "\n\nЕсли встретите статью, которая не содержит ошибок, ваша ОБЯЗАННОСТЬ её ОДОБРИТЬ"
+            // "Здравствуйте, редактор!" +
+            // "\n\nС сегодняшнего дня Вы ответственны за популярность журнала и за все влекущиеся изменения." +
+            // "\n\nОбращаем Ваше внимание на изменение популярности в зависимости от количества найденных ошибок:" +
+            // "\n\n0-1 ошибка:  + к популярности" +
+            // "\n2 ошибки:  популярность не изменится" +
+            // "\n3+ ошибок:  - к популярности"
+        };
+
+        public CheckMode(Controller controller, Action goToMainOffice)
         {
             exitButton = new ExitButton(controller.Sounds);
             this.controller = controller;
+            this.goToMainOffice = goToMainOffice;
             BookModes = new Dictionary<Tab, Bitmap>
             {
                 [Tab.Guide] = new Bitmap(Properties.Resources.HeadBookTab1),
@@ -151,7 +152,7 @@ namespace Rewrite_It
         /// Обновляет элементы управления для данного интерфейса.
         /// </summary>
         /// <param name="tab">Вкладка, которую нужно открыть</param>
-        public void UpdateStatus(Tab tab)
+        public void UpdateTab(Tab tab)
         {
             CurrentBookMode = tab;
             showGuideText = false;
@@ -160,9 +161,7 @@ namespace Rewrite_It
             if (SelectedTextArea != null && MistakesList.ContainsKey(SelectedTextArea.GetHashCode()))
                 SelectedTextArea = null;
             if (tab == Tab.MistakesList)
-            {
                 foreach (var e in listMistakeLabels) controller.Form.Controls.Add(e);
-            }
             if (tab == Tab.Guide)
                 showGuideText = true;
 
@@ -530,6 +529,34 @@ namespace Rewrite_It
         public void Tick()
         {
             exitButton.Tick();
+        }
+
+        public void Change(Form1 form)
+        {
+            form.BackgroundImage = Properties.Resources.CheckModeBackground;
+            SelectedTextArea = null;
+            controller.Sounds.PlayCheckMode();
+            UpdateTab(CurrentBookMode);
+        }
+
+        public void MouseDown()
+        {
+            if (CheckHasMatching()) return;
+            if (IsClickedExitButton())
+            {
+                controller.Sounds.PlayCheckMode();
+                goToMainOffice();
+            }
+            else if (AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(new Point(BookLocation.X + 143, BookLocation.Y + 6), new Size(112, 80))))
+            {
+                controller.Sounds.PlayPaper();
+                UpdateTab(Tab.MistakesList);
+            }
+            else if (AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(new Point(BookLocation.X + 28, BookLocation.Y + 6), new Size(112, 80))))
+            {
+                controller.Sounds.PlayPaper();
+                UpdateTab(Tab.Guide);
+            }
         }
     }
 }

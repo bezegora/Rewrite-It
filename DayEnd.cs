@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 namespace Rewrite_It
 {
-    public class DayEnd
+    public class DayEnd : IUserInterface
     {
         private readonly Controller controller;
         private readonly SolidBrush brush = new SolidBrush(Color.White);
@@ -16,6 +16,13 @@ namespace Rewrite_It
         {
             this.controller = controller;
         }
+
+        public void Change(Form1 form)
+        {
+            controller.Sounds.StopOfficeBackground();
+        }
+
+        public void MouseDown() { }
 
         public void Paint(Graphics graphics)
         {
@@ -44,6 +51,8 @@ namespace Rewrite_It
             brush,
             new Rectangle(300, 540, 960, 450));
         }
+
+        public void Tick() { }
 
         private string GetStringMeaning(int increase)
         {

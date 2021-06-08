@@ -13,7 +13,7 @@ namespace Rewrite_It
         /// <summary>
         /// Определяет текущий нарисованный в форме игровой интерфейс
         /// </summary>
-        public Interface CurrentInterface { get; private set; }
+        public IUserInterface CurrentInterface { get; private set; }
 
         public MainOffice Office { get; }
         public CheckMode CheckMode { get; }
@@ -30,13 +30,12 @@ namespace Rewrite_It
 
             this.Form = form;
             Stats = new GameStats();
-            CheckMode = new CheckMode(this);
-            Email = new Email(Stats, form.Controls);
+            CheckMode = new CheckMode(this, () => ChangeInterface(Office));
+            Email = new Email(Stats, form.Controls, Sounds);
             DayEnd = new DayEnd(this);
-            Office = new MainOffice(this);
+            Office = new MainOffice(this, () => ChangeInterface(CheckMode), () => ChangeInterface(DayEnd));
 
-            ChangeInterface(Properties.Resources.OfficeBackground, Interface.MainOffice);
-            //ChangeInterface(Interface.DayEnd);
+            ChangeInterface(Office);
 
             var events = new Queue<(Action, CharacterImage)>();
 
@@ -67,68 +66,24 @@ namespace Rewrite_It
 
         public void Tick()
         {
-            Office.Tick();
-            Sounds.Tick();
-            CheckMode.Tick();
+            CurrentInterface.Tick();
             GameEvents.StartEvent();
         }
 
-        public void Paint(Graphics graphics)
-        {
-            switch (CurrentInterface)
-            {
-                case Interface.MainOffice: Office.Paint(graphics); break;
-                case Interface.CheckMode: CheckMode.Paint(graphics); break;
-                case Interface.DayEnd: DayEnd.Paint(graphics); break;
-            }
-        }
+        public void Paint(Graphics graphics) => CurrentInterface.Paint(graphics);
 
-        public void MouseDown()
-        {
-            if (CheckMode.CheckHasMatching()) return;
-            if (Office.IsClickedDocument())
-            {
-                Sounds.PlayCheckMode();
-                ChangeInterface(Properties.Resources.CheckModeBackground, Interface.CheckMode);
-            }
-            else if (CheckMode.IsClickedExitButton())
-            {
-                Sounds.PlayCheckMode();
-                ChangeInterface(Properties.Resources.OfficeBackground, Interface.MainOffice);
-            }
-            else if (AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(new Point(CheckMode.BookLocation.X + 143, CheckMode.BookLocation.Y + 6), new Size(112, 80))))
-            {
-                Sounds.PlayPaper();
-                CheckMode.UpdateStatus(Tab.MistakesList);
-            }
-            else if (AuxiliaryMethods.CursorIsHoveredArea(new Rectangle(new Point(CheckMode.BookLocation.X + 28, CheckMode.BookLocation.Y + 6), new Size(112, 80))))
-            {
-                Sounds.PlayPaper();
-                CheckMode.UpdateStatus(Tab.Guide);
-            }
-            else GameEvents.SkipPhrase();
-        }
+        public void MouseDown() => CurrentInterface.MouseDown();
 
         /// <summary>
         /// Изменяет игровой интерфейс
         /// </summary>
         /// <param name="backgroundImage">Фоновое изображение интерфейса</param>
         /// <param name="_interface">Новый интерфейс</param>
-        public void ChangeInterface(Image backgroundImage, Interface _interface)
+        public void ChangeInterface(IUserInterface value)
         {
-            CurrentInterface = _interface;
-            if (backgroundImage != null) Form.BackgroundImage = backgroundImage;
-            //CheckMode.SetSelectedTextArea(null);
-            CheckMode.SelectedTextArea = null;
             Form.Controls.Clear();
-            if (CurrentInterface is Interface.MainOffice)
-                Office.UpdateStatus();
-            else if (CurrentInterface is Interface.CheckMode)
-                CheckMode.UpdateStatus(CheckMode.CurrentBookMode);
-            else if (CurrentInterface is Interface.DayEnd)
-                Sounds.StopOfficeBackground();
+            CurrentInterface = value;
+            CurrentInterface.Change(Form);
         }
-
-        public void ChangeInterface(Interface _interface) => ChangeInterface(null, _interface);
     }
 }

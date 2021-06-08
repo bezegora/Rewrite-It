@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace Rewrite_It
 {
-    public class MainOffice
+    public class MainOffice : IUserInterface
     {
         private readonly Controller controller;
 
@@ -34,10 +34,15 @@ namespace Rewrite_It
         private readonly GraphicObject headEditorBook = new GraphicObject(new Bitmap(Properties.Resources.HeadEditorBook2), new Point(110, 515));
         private readonly GraphicObject officeComputer = new GraphicObject(new Bitmap(Properties.Resources.OfficeComputer, 580, 530), new Point(900, 320));
 
+        private readonly Action goToCheckMode;
+        private readonly Action goToDayEnd;
+
         public string LetterText { get; private set; }
 
-        public MainOffice(Controller controller)
+        public MainOffice(Controller controller, Action goToCheckMode, Action goToDayEnd)
         {
+            this.goToCheckMode = goToCheckMode;
+            this.goToDayEnd = goToDayEnd;
             Option1 = new Label
             {
                 Text = "Одобрить",
@@ -77,8 +82,9 @@ namespace Rewrite_It
         /// <summary>
         /// Обновляет элементы управления для этого интерфейса.
         /// </summary>
-        public void UpdateStatus()
+        public void Change(Form1 form)
         {
+            form.BackgroundImage = Properties.Resources.OfficeBackground;
             AddLabelsToControls(DialogPhrases.ToArray());
             AddLabelsToControls(Option1, Option2);
         }
@@ -87,7 +93,7 @@ namespace Rewrite_It
         {
             if (controller.Level.Events.Count == 0)
             {
-                controller.ChangeInterface(Interface.DayEnd);
+                goToDayEnd();
                 return;
             }
             ClearDialog();
@@ -255,7 +261,7 @@ namespace Rewrite_It
 
         public void AddLabelsToControls(params Label[] labels)
         {
-            if (!(controller.CurrentInterface is Interface.MainOffice)) return;
+            //if (!(controller.CurrentInterface is Interface.MainOffice)) return;
             foreach (var label in labels)
                 controller.Form.Controls.Add(label);
         }
@@ -273,6 +279,16 @@ namespace Rewrite_It
         public void Tick()
         {
             Person.Tick();
+        }
+
+        public void MouseDown() 
+        {
+            if (IsClickedDocument())
+            {
+                controller.Sounds.PlayCheckMode();
+                goToCheckMode();
+            }
+            else GameEvents.SkipPhrase();
         }
     }
 }
