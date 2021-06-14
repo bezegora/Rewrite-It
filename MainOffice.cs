@@ -14,12 +14,14 @@ namespace Rewrite_It
         /// <summary>
         /// Функциональная кнопка "Одобрить"
         /// </summary>
-        public Label Option1 { get; }
+        private readonly Label option1;
 
         /// <summary>
         /// Функциональная кнопка "Отклонить"
         /// </summary>
-        public Label Option2 { get; }
+        private readonly Label option2;
+
+        private readonly Label dayEndButton;
 
         public Character Person { get; }
 
@@ -45,7 +47,7 @@ namespace Rewrite_It
             this.goToEmail = goToEmail;
             this.goToCheckMode = goToCheckMode;
             this.goToDayEnd = goToDayEnd;
-            Option1 = new Label
+            option1 = new Label
             {
                 Text = "Одобрить",
                 Font = new Font(StringStyle.FontFamily, 19),
@@ -54,7 +56,7 @@ namespace Rewrite_It
                 BorderStyle = BorderStyle.FixedSingle,
                 Location = new Point(-500, 0)
             };
-            Option2 = new Label
+            option2 = new Label
             {
                 Text = "Отклонить",
                 Font = new Font(StringStyle.FontFamily, 19),
@@ -67,8 +69,23 @@ namespace Rewrite_It
             DialogPhrases = new List<Label>();
             this.controller = controller;
 
-            Option1.MouseDown += new MouseEventHandler(OnClickOnOption);
-            Option2.MouseDown += new MouseEventHandler(OnClickOnOption);
+            option1.MouseDown += new MouseEventHandler(OnClickOnOption);
+            option2.MouseDown += new MouseEventHandler(OnClickOnOption);
+
+            dayEndButton = new Label
+            {
+                Text = "Завершить день",
+                Font = new Font(StringStyle.FontFamily, 24),
+                AutoSize = true,
+                ForeColor = Color.DarkBlue,
+                BorderStyle = BorderStyle.FixedSingle,
+                Location = new Point(1200, 770)
+            };
+            dayEndButton.MouseDown += (sender, e) =>
+            {
+                controller.Sounds.PlayClick();
+                goToDayEnd();
+            };
         }
 
         public void Paint(Graphics graphics)
@@ -88,15 +105,16 @@ namespace Rewrite_It
         {
             form.BackgroundImage = Properties.Resources.OfficeBackground;
             AuxiliaryMethods.AddLabelsToControls(controller.Form.Controls, DialogPhrases.ToArray());
-            AuxiliaryMethods.AddLabelsToControls(controller.Form.Controls, Option1, Option2);
+            AuxiliaryMethods.AddLabelsToControls(controller.Form.Controls, option1, option2);
             controller.Sounds.PlayOfficeBackground();
+            //controller.Form.Controls.Add(dayEndButton);
         }
 
         public void EnterCharacter()
         {
             if (controller.Level.Events.Count == 0)
             {
-                goToDayEnd();
+                controller.Form.Controls.Add(dayEndButton);
                 return;
             }
             ClearDialog();
@@ -196,8 +214,8 @@ namespace Rewrite_It
 
         private void RemoveOptions()
         {
-            Option1.Location = Form1.Beyond;
-            Option2.Location = Form1.Beyond;
+            option1.Location = Form1.Beyond;
+            option2.Location = Form1.Beyond;
         }
 
         /// <summary>
@@ -280,8 +298,8 @@ namespace Rewrite_It
         {
             controller.Sounds.PlayPaper();
             document.Position = new Point(650, 630);
-            Option1.Location = new Point(150, 520);
-            Option2.Location = new Point(317, 520);
+            option1.Location = new Point(150, 520);
+            option2.Location = new Point(317, 520);
         }
 
         public void Tick()
