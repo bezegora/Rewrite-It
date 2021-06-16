@@ -25,6 +25,8 @@ Windows Forms (является частью .NET Framework)
 
 УБЕДИТЕСЬ, ЧТО РАЗМЕР ОБЪЕКТОВ НА МОНИТОРЕ ИМЕЕТ SCALE 125%
 
+Настройки -> Система -> Экран
+
 ![ScreenShot](https://imageup.ru/img100/3757396/125.jpg)
 
 1. Запустить файл Rewrite-It.csproj
